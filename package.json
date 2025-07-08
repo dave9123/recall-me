@@ -1,0 +1,15 @@
+{
+  "name": "recall-me",
+  "version": "0.0.0",
+  "description": "Why bother forgetting when you can remember?",
+  "main": "index.js",
+  "scripts": {
+    "start": ""
+  },
+  "keywords": [],
+  "author": "dave9123",
+  "license": "",
+  "dependencies": {
+    "typescript": "^5.8.3"
+  }
+}
