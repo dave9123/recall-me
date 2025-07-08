@@ -1,15 +1,20 @@
 {
-  "name": "recall-me",
-  "version": "0.0.0",
-  "description": "Why bother forgetting when you can remember?",
-  "main": "index.js",
-  "scripts": {
-    "start": ""
-  },
-  "keywords": [],
-  "author": "dave9123",
-  "license": "",
-  "dependencies": {
-    "typescript": "^5.8.3"
-  }
+    "name": "recall-me",
+    "version": "0.0.0",
+    "description": "Why bother forgetting when you can remember?",
+    "main": "index.js",
+    "scripts": {
+        "start": "ts-node src/index.ts",
+        "build": "tsc"
+    },
+    "keywords": [],
+    "author": "dave9123",
+    "license": "",
+    "dependencies": {
+        "@slack/bolt": "^4.4.0",
+        "dotenv": "^17.1.0"
+    },
+    "devDependencies": {
+        "typescript": "^5.8.3"
+    }
 }
