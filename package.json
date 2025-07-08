@@ -5,7 +5,8 @@
     "main": "index.js",
     "scripts": {
         "start": "tsx src/index.ts",
-        "build": "tsc"
+        "build": "tsc -p tsconfig.json",
+        "test": "jest --coverage"
     },
     "keywords": [],
     "author": "dave9123",

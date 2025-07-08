@@ -1,1 +1,1 @@
-import slackBot from "./bots/slack"
+import slackBot from "./bots/slack";
