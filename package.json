@@ -4,7 +4,7 @@
     "description": "Why bother forgetting when you can remember?",
     "main": "index.js",
     "scripts": {
-        "start": "ts-node src/index.ts",
+        "start": "tsx src/index.ts",
         "build": "tsc"
     },
     "keywords": [],
@@ -12,9 +12,15 @@
     "license": "",
     "dependencies": {
         "@slack/bolt": "^4.4.0",
-        "dotenv": "^17.1.0"
+        "dotenv": "^17.1.0",
+        "drizzle-orm": "^0.44.2",
+        "pg": "^8.16.3"
     },
     "devDependencies": {
+        "@types/pg": "^8.15.4",
+        "drizzle-kit": "^0.31.4",
+        "jest": "^30.0.4",
+        "tsx": "^4.20.3",
         "typescript": "^5.8.3"
     }
 }
