@@ -1,4 +1,6 @@
 .env
 .obsidian
 .git
+.DS_Store
+.idea
 node_modules

@@ -11,7 +11,9 @@ const app = new App({
     port: parseInt(process.env.SLACK_PORT || "3000", 10),
 });
 
-export async function slackBot() {
+
+
+export default async function startBot() {
     try {
         await app.start();
         logger.info(`Slack bot is running on port ${process.env.SLACK_PORT}`);

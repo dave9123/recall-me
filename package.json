@@ -6,11 +6,13 @@
     "scripts": {
         "start": "tsx src/index.ts",
         "build": "tsc -p tsconfig.json",
-        "test": "jest --coverage"
+        "test": "jest --coverage",
+        "migrations:generate": "drizzle-kit generate",
+        "migrations:push": "drizzle-kit push"
     },
     "keywords": [],
     "author": "dave9123",
-    "license": "",
+    "license": "GPLv3",
     "dependencies": {
         "@slack/bolt": "^4.4.0",
         "dotenv": "^17.1.0",
