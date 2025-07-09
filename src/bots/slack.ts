@@ -1,15 +1,10 @@
 import { App } from "@slack/bolt";
 import dotenv from "dotenv";
-import { createLogger } from "../logger";
+import { createLogger } from "../modules/logger";
 
 const logger = createLogger("Slack");
 
 dotenv.config();
-
-if (isNaN(Number(process.env.SLACK_PORT)) || Number(process.env.SLACK_PORT) <= 0 || Number(process.env.SLACK_PORT) > 65535) {
-    logger.error("SLACK_PORT is not a valid number");
-    process.exit(1);
-}
 
 const app = new App({
     token: process.env.SLACK_OAUTH_TOKEN,
