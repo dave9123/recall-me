@@ -8,5 +8,6 @@ Why bother forgetting when you can remember?—am I right?
 - [ ] Support Discord
 - [ ] Support WhatsApp
 - [ ] Support Zulip
+- [ ] Support Signal
 - [ ] Support Matrix
 - [ ] Make web version
