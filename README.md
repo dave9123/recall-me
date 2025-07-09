@@ -4,6 +4,9 @@ Why bother forgetting when you can remember?—am I right?
 
 ## To-do
 
-- [ ] Slack bot
-- [ ] Discord bot
-- [ ] WhatsApp bot
+- [ ] Support Slack
+- [ ] Support Discord
+- [ ] Support WhatsApp
+- [ ] Support Zulip
+- [ ] Support Matrix
+- [ ] Make web version

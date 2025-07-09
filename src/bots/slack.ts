@@ -1,10 +1,7 @@
 import { App } from "@slack/bolt";
-import dotenv from "dotenv";
 import { createLogger } from "../modules/logger";
 
 const logger = createLogger("Slack");
-
-dotenv.config();
 
 const app = new App({
     token: process.env.SLACK_OAUTH_TOKEN,
@@ -14,7 +11,7 @@ const app = new App({
     port: parseInt(process.env.SLACK_PORT || "3000", 10),
 });
 
-(async () => {
+export async function slackBot() {
     try {
         await app.start();
         logger.info(`Slack bot is running on port ${process.env.SLACK_PORT}`);
@@ -22,4 +19,4 @@ const app = new App({
         logger.error("Error starting Slack bot:", error);
         process.exit(1);
     }
-})();
+}
