@@ -2,8 +2,8 @@ import { integer, pgTable, varchar, timestamp } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    username: varchar().notNull(),
-    email: varchar({ length: 320 }).notNull().unique(),
+    uid: varchar().notNull(),
+    provider: varchar().notNull(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp().defaultNow().notNull(),
     lastUsed: timestamp().defaultNow().notNull()
@@ -11,7 +11,7 @@ export const usersTable = pgTable("users", {
 
 export const userCredentialsTable = pgTable("userCredentials", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    userId: integer().notNull().references(() => usersTable.id),
+    uid: integer().notNull().references(() => usersTable.id),
     authProvider: varchar().notNull(),
     authData: varchar().notNull(),
     createdAt: timestamp().defaultNow().notNull(),

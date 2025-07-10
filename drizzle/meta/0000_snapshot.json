@@ -1,5 +1,5 @@
 {
-  "id": "85a00b96-f46b-474d-8937-576b28d6767e",
+  "id": "eacf8442-2e73-4c06-aa11-3ceafa8954a8",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -24,6 +24,12 @@
             "cache": "1",
             "cycle": false
           }
+        },
+        "uid": {
+          "name": "uid",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
         },
         "ownerId": {
           "name": "ownerId",
@@ -100,7 +106,15 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "reminders_uid_unique": {
+          "name": "reminders_uid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "uid"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -216,8 +230,8 @@
             "cycle": false
           }
         },
-        "userId": {
-          "name": "userId",
+        "uid": {
+          "name": "uid",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -258,12 +272,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "userCredentials_userId_users_id_fk": {
-          "name": "userCredentials_userId_users_id_fk",
+        "userCredentials_uid_users_id_fk": {
+          "name": "userCredentials_uid_users_id_fk",
           "tableFrom": "userCredentials",
           "tableTo": "users",
           "columnsFrom": [
-            "userId"
+            "uid"
           ],
           "columnsTo": [
             "id"
@@ -299,15 +313,15 @@
             "cycle": false
           }
         },
-        "username": {
-          "name": "username",
+        "uid": {
+          "name": "uid",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
-        "email": {
-          "name": "email",
-          "type": "varchar(320)",
+        "provider": {
+          "name": "provider",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -336,15 +350,7 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "users_email_unique": {
-          "name": "users_email_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

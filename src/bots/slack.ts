@@ -1,5 +1,8 @@
 import { App } from "@slack/bolt";
 import { createLogger } from "../modules/logger";
+import db from "../modules/db";
+import { eq, or, arrayContained } from "drizzle-orm";
+import { remindersTable } from "../db/schema";
 
 const logger = createLogger("Slack");
 
@@ -61,20 +64,80 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                     {
                         type: "input",
                         block_id: "reminder_time",
+                        element: {
+                            type: "datetimepicker",
+                            action_id: "reminder_input"
+                        },
                         label: {
                             type: "plain_text",
                             text: "Time",
+                            emoji: true
+                        }
+                    },
+                    {
+                        type: "section",
+                        block_id: "reminder_priority",
+                        text: {
+                            type: "plain_text",
+                            text: "Priority",
                         },
-                        element: {
-                            type: "plain_text_input",
-                            action_id: "time_input",
+                        accessory: {
+                            type: "static_select",
                             placeholder: {
                                 type: "plain_text",
-                                text: "1 October 2024 14:30 UTC",
+                                text: "Select priority (optional)",
+                                emoji: true
                             },
-                        },
-                    },
+                            initial_option: {
+                                text: {
+                                    type: "plain_text",
+                                    text: "None",
+                                    emoji: true
+                                },
+                                value: "none"
+                            },
+                            options: [
+                                {
+                                    text: {
+                                        type: "plain_text",
+                                        text: "None",
+                                        emoji: true
+                                    },
+                                    value: "none"
+                                },
+                                {
+                                    text: {
+                                        type: "plain_text",
+                                        text: "Low",
+                                        emoji: true
+                                    },
+                                    value: "low"
+                                },
+                                {
+                                    text: {
+                                        type: "plain_text",
+                                        text: "Medium",
+                                        emoji: true
+                                    },
+                                    value: "medium"
+                                },
+                                {
+                                    text: {
+                                        type: "plain_text",
+                                        text: "High",
+                                        emoji: true
+                                    },
+                                    value: "high"
+                                }
+                            ],
+                            action_id: "priority_select",
+                        }
+                    }
                 ],
+                submit: {
+                    type: "plain_text",
+                    text: "Create",
+                },
             },
         })
     } catch (error) {
@@ -85,6 +148,14 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
 app.command("/reminder-list", async ({ ack, body, client }) => {
     try {
         await ack();
+
+        const userId = Number(body.user_id);
+
+        const reminders = await db.select().from(remindersTable)
+            .where(or(
+                eq(remindersTable.ownerId, userId),
+                arrayContained(remindersTable.sharedWith, [userId]),
+            ));
 
         const result = await client.views.open({
             trigger_id: body.trigger_id,
