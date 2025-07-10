@@ -21,6 +21,7 @@ export const userCredentialsTable = pgTable("userCredentials", {
 
 export const remindersTable = pgTable("reminders", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    uid: varchar().notNull().unique(),
     ownerId: integer().notNull().references(() => usersTable.id),
     title: varchar().notNull(),
     description: varchar(),

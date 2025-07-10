@@ -30,27 +30,32 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                         block_id: "reminder_title",
                         label: {
                             type: "plain_text",
-                            text: "Reminder Title",
+                            text: "Title",
                         },
                         element: {
                             type: "plain_text_input",
                             action_id: "title_input",
+                            placeholder: {
+                                type: "plain_text",
+                                text: "Add title",
+                            },
                         },
                     },
                     {
                         type: "input",
-                        block_id: "reminder_date",
+                        block_id: "reminder_description",
                         label: {
                             type: "plain_text",
-                            text: "Reminder Date (YYYY-MM-DD)",
+                            text: "Description",
                         },
                         element: {
                             type: "plain_text_input",
-                            action_id: "date_input",
+                            action_id: "description_input",
                             placeholder: {
                                 type: "plain_text",
-                                text: "2023-10-01",
+                                text: "Add description (optional)",
                             },
+                            multiline: true,
                         },
                     },
                     {
@@ -58,7 +63,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                         block_id: "reminder_time",
                         label: {
                             type: "plain_text",
-                            text: "Reminder Time (HH:mm)",
+                            text: "Time",
                         },
                         element: {
                             type: "plain_text_input",
@@ -74,6 +79,44 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
         })
     } catch (error) {
         logger.error("Error handling /reminder-create command:", error);
+    }
+});
+
+app.command("/reminder-list", async ({ ack, body, client }) => {
+    try {
+        await ack();
+
+        const result = await client.views.open({
+            trigger_id: body.trigger_id,
+            view: {
+                type: "modal",
+                callback_id: "list_reminders_modal",
+                title: {
+                    type: "plain_text",
+                    text: "Reminders List",
+                },
+                blocks: [
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: "Here are your reminders:",
+                        },
+                    },
+                    {
+                        type: "context",
+                        elements: [
+                            {
+                                type: "plain_text",
+                                text: "No reminders found.",
+                            },
+                        ],
+                    },
+                ],
+            },
+        });
+    } catch (error) {
+        logger.error("Error handling /reminder-list command:", error);
     }
 });
 
