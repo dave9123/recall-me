@@ -39,8 +39,8 @@ db.execute(sql`
         BEFORE UPDATE ON reminders
         FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
 
-    CREATE OR REPLACE TRIGGER toNotify_update_timestamp
-        BEFORE UPDATE ON "toNotify"
+    CREATE OR REPLACE TRIGGER notified_update_timestamp
+        BEFORE UPDATE ON "notified"
         FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
 `).then(() => {
     logger.info("Database triggers created successfully.");
