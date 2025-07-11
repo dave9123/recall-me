@@ -18,7 +18,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
     try {
         await ack();
         console.log(body);
-        const result = await client.views.open({
+        await client.views.open({
             trigger_id: body.trigger_id,
             view: {
                 type: "modal",
@@ -51,6 +51,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                             type: "plain_text",
                             text: "Description",
                         },
+                        optional: true,
                         element: {
                             type: "plain_text_input",
                             action_id: "description_input",
@@ -75,13 +76,14 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                         }
                     },
                     {
-                        type: "section",
+                        type: "input",
                         block_id: "reminder_priority",
-                        text: {
+                        label: {
                             type: "plain_text",
                             text: "Priority",
                         },
-                        accessory: {
+                        optional: true,
+                        element: {
                             type: "static_select",
                             placeholder: {
                                 type: "plain_text",
@@ -144,17 +146,26 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
     }
 });
 
+app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
+    try {
+        await ack();
+        console.log("view", view);
+    } catch (error) {
+        logger.error("Error handling create reminder modal:", error);
+    }
+});
+
 app.command("/reminder-list", async ({ ack, body, client }) => {
     try {
         await ack();
 
-        const userId = Number(body.user_id);
+        /*const userId = Number(body.user_id);
 
         const reminders = await db.select().from(remindersTable)
             .where(or(
                 eq(remindersTable.ownerId, userId),
                 arrayContained(remindersTable.sharedWith, [userId]),
-            ));
+            ));*/
 
         const result = await client.views.open({
             trigger_id: body.trigger_id,
@@ -187,15 +198,6 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
         });
     } catch (error) {
         logger.error("Error handling /reminder-list command:", error);
-    }
-});
-
-app.action("*", async ({ body, ack, client }) => {
-    console.log("Action received:", body);
-    try {
-        await ack();
-    } catch (error) {
-        logger.error("Error handling action:", error);
     }
 });
 

@@ -15,3 +15,7 @@ Why bother forgetting when you can remember?—am I right?
 ## Notes
 
 - Slack tokens: user (xoxp-...), bot (xoxb-...), and app (xapp-...)
+
+## Motivation
+
+The motivation? I forgot something again—getting a photo of myself printed.
