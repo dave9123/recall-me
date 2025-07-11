@@ -130,7 +130,6 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                                     value: "high"
                                 }
                             ],
-                            action_id: "priority_select",
                         }
                     }
                 ],
@@ -188,6 +187,15 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
         });
     } catch (error) {
         logger.error("Error handling /reminder-list command:", error);
+    }
+});
+
+app.action("*", async ({ body, ack, client }) => {
+    console.log("Action received:", body);
+    try {
+        await ack();
+    } catch (error) {
+        logger.error("Error handling action:", error);
     }
 });
 
