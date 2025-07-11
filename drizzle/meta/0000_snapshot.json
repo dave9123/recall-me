@@ -1,9 +1,105 @@
 {
-  "id": "bf8a3baa-b393-46d4-872c-927595752faa",
+  "id": "8883e1a3-56f9-452d-b2d0-17e865d7e16e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.notified": {
+      "name": "notified",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "notified_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "reminderId": {
+          "name": "reminderId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "notified": {
+          "name": "notified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "provider": {
+          "name": "provider",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "notified_reminderId_reminders_id_fk": {
+          "name": "notified_reminderId_reminders_id_fk",
+          "tableFrom": "notified",
+          "tableTo": "reminders",
+          "columnsFrom": [
+            "reminderId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "notified_userId_users_uid_fk": {
+          "name": "notified_userId_users_uid_fk",
+          "tableFrom": "notified",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "uid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.reminders": {
       "name": "reminders",
       "schema": "",
@@ -33,7 +129,7 @@
         },
         "ownerId": {
           "name": "ownerId",
-          "type": "integer",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -57,7 +153,7 @@
         },
         "sharedWith": {
           "name": "sharedWith",
-          "type": "integer[]",
+          "type": "varchar[]",
           "primaryKey": false,
           "notNull": true
         },
@@ -78,28 +174,15 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "reminders_ownerId_users_id_fk": {
-          "name": "reminders_ownerId_users_id_fk",
+        "reminders_ownerId_users_uid_fk": {
+          "name": "reminders_ownerId_users_uid_fk",
           "tableFrom": "reminders",
           "tableTo": "users",
           "columnsFrom": [
             "ownerId"
           ],
           "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "reminders_sharedWith_users_id_fk": {
-          "name": "reminders_sharedWith_users_id_fk",
-          "tableFrom": "reminders",
-          "tableTo": "users",
-          "columnsFrom": [
-            "sharedWith"
-          ],
-          "columnsTo": [
-            "id"
+            "uid"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -115,96 +198,6 @@
           ]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.toNotify": {
-      "name": "toNotify",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "toNotify_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "reminderId": {
-          "name": "reminderId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "userId": {
-          "name": "userId",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "notified": {
-          "name": "notified",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "toNotify_reminderId_reminders_id_fk": {
-          "name": "toNotify_reminderId_reminders_id_fk",
-          "tableFrom": "toNotify",
-          "tableTo": "reminders",
-          "columnsFrom": [
-            "reminderId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "toNotify_userId_users_id_fk": {
-          "name": "toNotify_userId_users_id_fk",
-          "tableFrom": "toNotify",
-          "tableTo": "users",
-          "columnsFrom": [
-            "userId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -232,7 +225,7 @@
         },
         "uid": {
           "name": "uid",
-          "type": "integer",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -277,23 +270,17 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "users_uid_users_id_fk": {
-          "name": "users_uid_users_id_fk",
-          "tableFrom": "users",
-          "tableTo": "users",
-          "columnsFrom": [
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_uid_unique": {
+          "name": "users_uid_unique",
+          "nullsNotDistinct": false,
+          "columns": [
             "uid"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          ]
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

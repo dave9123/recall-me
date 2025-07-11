@@ -1,8 +1,8 @@
-import { integer, pgTable, varchar, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, varchar, timestamp, boolean } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    uid: integer().notNull(),
+    uid: varchar().notNull().unique(),
     username: varchar().notNull(),
     authData: varchar(),
     provider: varchar().notNull(),
@@ -14,20 +14,21 @@ export const usersTable = pgTable("users", {
 export const remindersTable = pgTable("reminders", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     uid: varchar().notNull().unique(),
-    ownerId: integer().notNull().references(() => usersTable.id),
+    ownerId: varchar().notNull().references(() => usersTable.uid),
     title: varchar().notNull(),
     description: varchar(),
     time: timestamp(),
-    sharedWith: integer().array().references(() => usersTable.id).notNull(),
+    sharedWith: varchar().array().notNull(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp().defaultNow().notNull()
 });
 
-export const toNotifyTable = pgTable("toNotify", {
+export const notifiedTable = pgTable("notified", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     reminderId: integer().notNull().references(() => remindersTable.id),
-    userId: integer().notNull().references(() => usersTable.id),
-    notified: integer().notNull().default(0),
+    userId: varchar().notNull().references(() => usersTable.uid),
+    notified: boolean().default(false).notNull(),
+    provider: varchar().notNull(),
     createdAt: timestamp().defaultNow().notNull(),
-    updatedAt: timestamp().defaultNow().notNull()   
+    updatedAt: timestamp().defaultNow().notNull()
 });

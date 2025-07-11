@@ -1,8 +1,8 @@
 import { App } from "@slack/bolt";
 import { createLogger } from "../modules/logger";
 import db from "../modules/db";
-import { eq, or, arrayContained } from "drizzle-orm";
-import { remindersTable } from "../db/schema";
+import { eq, or, arrayContained, sql } from "drizzle-orm";
+import { remindersTable, usersTable } from "../db/schema";
 
 const logger = createLogger("Slack");
 
@@ -17,8 +17,8 @@ const app = new App({
 app.command("/reminder-create", async ({ ack, body, client }) => {
     try {
         await ack();
-        console.log(body);
-        await client.views.open({
+
+        client.views.open({
             trigger_id: body.trigger_id,
             view: {
                 type: "modal",
@@ -57,7 +57,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                             action_id: "description_input",
                             placeholder: {
                                 type: "plain_text",
-                                text: "Add description (optional)",
+                                text: "Add description",
                             },
                             multiline: true,
                         },
@@ -87,26 +87,10 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                             type: "static_select",
                             placeholder: {
                                 type: "plain_text",
-                                text: "Select priority (optional)",
+                                text: "Select priority",
                                 emoji: true
                             },
-                            initial_option: {
-                                text: {
-                                    type: "plain_text",
-                                    text: "None",
-                                    emoji: true
-                                },
-                                value: "none"
-                            },
                             options: [
-                                {
-                                    text: {
-                                        type: "plain_text",
-                                        text: "None",
-                                        emoji: true
-                                    },
-                                    value: "none"
-                                },
                                 {
                                     text: {
                                         type: "plain_text",
@@ -140,7 +124,21 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                     text: "Create",
                 },
             },
-        })
+        });
+
+        await db.insert(usersTable).values({
+            uid: `slack-${body.user.id}`,
+            username: body.user.name,
+            provider: "slack",
+        }).onConflictDoUpdate({
+            target: usersTable.uid,
+            
+            set: {
+                username: body.user.name,
+            },
+
+            where: sql`${usersTable.username} IS DISTINCT FROM EXCLUDED.username`,
+        });
     } catch (error) {
         logger.error("Error handling /reminder-create command:", error);
     }
@@ -149,7 +147,19 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
 app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
     try {
         await ack();
+
+        logger.info(view["state"]["values"]);
+
+        /*await db.insert(remindersTable).values({
+            ownerId: body.user.id,
+            title: view["state"]["values"]["reminder_title"]["title_input"]["value"],
+            description: view["state"]["values"]["reminder_description"]["description_input"]["value"] ?? null,
+            time: new Date(view["state"]["values"]["reminder_time"]["reminder_input"]["selected_date"]),
+            priority: view["state"]["values"]["reminder_priority"]["reminder_priority"]["selected_option"]["value"] ?? null,
+        });*/
+
         console.log("view", view);
+        console.log("body", body);
     } catch (error) {
         logger.error("Error handling create reminder modal:", error);
     }
