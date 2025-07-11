@@ -43,7 +43,7 @@ db.execute(sql`
         BEFORE UPDATE ON "notified"
         FOR EACH ROW EXECUTE PROCEDURE set_updated_at();
 `).then(() => {
-    logger.info("Database triggers created successfully.");
+    logger.info("Database triggers created or replaced successfully.");
 }).catch((error) => {
     logger.error("Error creating database triggers:", error);
     logger.error("Ensure your database schema is up to date and the connection is properly configured.");

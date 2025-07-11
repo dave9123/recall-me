@@ -127,16 +127,12 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
         });
 
         await db.insert(usersTable).values({
-            uid: `slack-${body.user.id}`,
-            username: body.user.name,
+            uid: `slack-${body.user_id}`,
+            username: body.user_name,
             provider: "slack",
         }).onConflictDoUpdate({
             target: usersTable.uid,
-            
-            set: {
-                username: body.user.name,
-            },
-
+            set: { username: body.user_name },
             where: sql`${usersTable.username} IS DISTINCT FROM EXCLUDED.username`,
         });
     } catch (error) {
@@ -147,8 +143,6 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
 app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
     try {
         await ack();
-
-        logger.info(view["state"]["values"]);
 
         /*await db.insert(remindersTable).values({
             ownerId: body.user.id,
