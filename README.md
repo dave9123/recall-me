@@ -11,3 +11,7 @@ Why bother forgetting when you can remember?—am I right?
 - [ ] Support Signal
 - [ ] Support Matrix
 - [ ] Make web version
+
+## Notes
+
+- Slack tokens: user (xoxp-...), bot (xoxb-...), and app (xapp-...)

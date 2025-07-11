@@ -1,5 +1,5 @@
 {
-  "id": "eacf8442-2e73-4c06-aa11-3ceafa8954a8",
+  "id": "bf8a3baa-b393-46d4-872c-927595752faa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -209,89 +209,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.userCredentials": {
-      "name": "userCredentials",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "identity": {
-            "type": "always",
-            "name": "userCredentials_id_seq",
-            "schema": "public",
-            "increment": "1",
-            "startWith": "1",
-            "minValue": "1",
-            "maxValue": "2147483647",
-            "cache": "1",
-            "cycle": false
-          }
-        },
-        "uid": {
-          "name": "uid",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "authProvider": {
-          "name": "authProvider",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "authData": {
-          "name": "authData",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "createdAt": {
-          "name": "createdAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "lastUsed": {
-          "name": "lastUsed",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "userCredentials_uid_users_id_fk": {
-          "name": "userCredentials_uid_users_id_fk",
-          "tableFrom": "userCredentials",
-          "tableTo": "users",
-          "columnsFrom": [
-            "uid"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -315,9 +232,21 @@
         },
         "uid": {
           "name": "uid",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "username": {
+          "name": "username",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
+        },
+        "authData": {
+          "name": "authData",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
         },
         "provider": {
           "name": "provider",
@@ -348,7 +277,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "users_uid_users_id_fk": {
+          "name": "users_uid_users_id_fk",
+          "tableFrom": "users",
+          "tableTo": "users",
+          "columnsFrom": [
+            "uid"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

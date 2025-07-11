@@ -20,19 +20,11 @@ CREATE TABLE "toNotify" (
 	"updatedAt" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "userCredentials" (
-	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "userCredentials_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"uid" integer NOT NULL,
-	"authProvider" varchar NOT NULL,
-	"authData" varchar NOT NULL,
-	"createdAt" timestamp DEFAULT now() NOT NULL,
-	"updatedAt" timestamp DEFAULT now() NOT NULL,
-	"lastUsed" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE "users" (
 	"id" integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY (sequence name "users_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1),
-	"uid" varchar NOT NULL,
+	"uid" integer NOT NULL,
+	"username" varchar NOT NULL,
+	"authData" varchar,
 	"provider" varchar NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp DEFAULT now() NOT NULL,
@@ -43,4 +35,4 @@ ALTER TABLE "reminders" ADD CONSTRAINT "reminders_ownerId_users_id_fk" FOREIGN K
 ALTER TABLE "reminders" ADD CONSTRAINT "reminders_sharedWith_users_id_fk" FOREIGN KEY ("sharedWith") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "toNotify" ADD CONSTRAINT "toNotify_reminderId_reminders_id_fk" FOREIGN KEY ("reminderId") REFERENCES "public"."reminders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "toNotify" ADD CONSTRAINT "toNotify_userId_users_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "userCredentials" ADD CONSTRAINT "userCredentials_uid_users_id_fk" FOREIGN KEY ("uid") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "users" ADD CONSTRAINT "users_uid_users_id_fk" FOREIGN KEY ("uid") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;

@@ -17,7 +17,7 @@ const app = new App({
 app.command("/reminder-create", async ({ ack, body, client }) => {
     try {
         await ack();
-
+        console.log(body);
         const result = await client.views.open({
             trigger_id: body.trigger_id,
             view: {

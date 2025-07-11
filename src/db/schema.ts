@@ -2,18 +2,10 @@ import { integer, pgTable, varchar, timestamp } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    uid: varchar().notNull(),
+    uid: integer().notNull(),
+    username: varchar().notNull(),
+    authData: varchar(),
     provider: varchar().notNull(),
-    createdAt: timestamp().defaultNow().notNull(),
-    updatedAt: timestamp().defaultNow().notNull(),
-    lastUsed: timestamp().defaultNow().notNull()
-});
-
-export const userCredentialsTable = pgTable("userCredentials", {
-    id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    uid: integer().notNull().references(() => usersTable.id),
-    authProvider: varchar().notNull(),
-    authData: varchar().notNull(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp().defaultNow().notNull(),
     lastUsed: timestamp().defaultNow().notNull()
