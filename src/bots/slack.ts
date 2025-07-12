@@ -66,8 +66,9 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                         type: "input",
                         block_id: "reminder_time",
                         element: {
+                            initial_date_time: Math.floor(Date.now() / 1000),
                             type: "datetimepicker",
-                            action_id: "reminder_input"
+                            action_id: "time_input"
                         },
                         label: {
                             type: "plain_text",
@@ -85,6 +86,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                         optional: true,
                         element: {
                             type: "static_select",
+                            action_id: "priority_input",
                             placeholder: {
                                 type: "plain_text",
                                 text: "Select priority",
@@ -142,20 +144,25 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
 
 app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
     try {
-        await ack();
+        if (Date.now()/1000 >= view["state"]["values"]["reminder_time"]!["time_input"]!["selected_date_time"]!) {
+            await ack({
+                response_action: "errors",
+                errors: {
+                    reminder_time: "Can't seem to remind you in the past unless I have access to a ⏳ time machine, please pick a time in the future!"
+                }
+            });
+            return;
+        }
 
         /*await db.insert(remindersTable).values({
             ownerId: body.user.id,
             title: view["state"]["values"]["reminder_title"]["title_input"]["value"],
             description: view["state"]["values"]["reminder_description"]["description_input"]["value"] ?? null,
-            time: new Date(view["state"]["values"]["reminder_time"]["reminder_input"]["selected_date"]),
-            priority: view["state"]["values"]["reminder_priority"]["reminder_priority"]["selected_option"]["value"] ?? null,
+            time: new Date(view["state"]["values"]["reminder_time"]["time_input"]["selected_date_time"]),
+            priority: view["state"]["values"]["reminder_priority"]["priority_input"]["selected_option"]["value"] ?? null,
         });*/
-
-        console.log("view", view);
-        console.log("body", body);
     } catch (error) {
-        logger.error("Error handling create reminder modal:", error);
+        logger.error("Error handling reminder creation modal:", error);
     }
 });
 
@@ -171,7 +178,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
                 arrayContained(remindersTable.sharedWith, [userId]),
             ));*/
 
-        const result = await client.views.open({
+        await client.views.open({
             trigger_id: body.trigger_id,
             view: {
                 type: "modal",

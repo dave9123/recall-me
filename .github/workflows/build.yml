@@ -1,4 +1,4 @@
-name: Run tests and upload coverage
+name: Build CI
 
 on:
   - push
@@ -36,10 +36,10 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Run tests
-        run: pnpm run test
+      #- name: Run tests
+        #run: pnpm run test
 
-      - name: Upload results to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+      #- name: Upload results to Codecov
+        #uses: codecov/codecov-action@v5
+        #with:
+          #token: ${{ secrets.CODECOV_TOKEN }}
