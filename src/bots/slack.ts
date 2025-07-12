@@ -138,6 +138,8 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
 
 app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
     try {
+        updateAccountInfo(body.user.id, body.user.name, "slack");
+
         if (Date.now() / 1000 >= view["state"]["values"]["reminder_time"]!["time_input"]!["selected_date_time"]!) {
             await ack({
                 response_action: "errors",
@@ -179,11 +181,11 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
 app.command("/reminder-list", async ({ ack, body, client }) => {
     try {
         await ack();
-        console.log(body);
+
         updateAccountInfo(body.user_id, body.user_name, "slack");
 
         const reminders = await db.select({
-            id: remindersTable.id,
+            uid: remindersTable.uid,
             title: remindersTable.title,
             description: remindersTable.description,
             time: remindersTable.time,
@@ -191,7 +193,56 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
         }).from(remindersTable)
             .where(eq(remindersTable.ownerId, `slack-${body.user_id}`));
 
-        console.log(reminders);
+        let remindersList = [];
+        if (reminders.length === 0) {
+            remindersList.push({
+                type: "context",
+                elements: [
+                    {
+                        type: "plain_text",
+                        text: "No reminders found.",
+                    },
+                ],
+            });
+        } else {
+            for (const reminder of reminders) {
+                remindersList.push({
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*${reminder.title}*${reminder.description ? `\n${reminder.description}` : ""}`,
+                    },
+                },
+                {
+                    type: "context",
+                    elements: [
+                        {
+                            type: "plain_text",
+                            text: `Priority: ${reminder.priority ? ["High", "Medium", "Low"][reminder.priority - 1] : "None"}`,
+                        },
+                        {
+                            type: "plain_text",
+                            text: `|`,
+                        },
+                        {
+                            type: "plain_text",
+                            text: `ID: ${reminder.uid}`,
+                        },
+                        {
+                            type: "plain_text",
+                            text: `|`,
+                        },
+                        {
+                            type: "plain_text",
+                            text: `Time: ${reminder.time?.toUTCString()}`,
+                        },
+                    ],
+                },
+                {
+                    type: "divider",
+                });
+            }
+        }
 
         await client.views.open({
             trigger_id: body.trigger_id,
@@ -211,14 +262,9 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
                         },
                     },
                     {
-                        type: "context",
-                        elements: [
-                            {
-                                type: "plain_text",
-                                text: "No reminders found.",
-                            },
-                        ],
+                        type: "divider",
                     },
+                    ...remindersList
                 ],
             },
         });
