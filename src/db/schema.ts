@@ -18,7 +18,6 @@ export const remindersTable = pgTable("reminders", {
     title: varchar().notNull(),
     description: varchar(),
     time: timestamp(),
-    sharedWith: varchar().array().notNull(),
     createdAt: timestamp().defaultNow().notNull(),
     updatedAt: timestamp().defaultNow().notNull()
 });
