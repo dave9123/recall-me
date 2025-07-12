@@ -16,6 +16,7 @@ export const remindersTable = pgTable("reminders", {
     uid: varchar().notNull().unique(),
     ownerId: varchar().notNull().references(() => usersTable.uid),
     title: varchar().notNull(),
+    priority: varchar(),
     description: varchar(),
     time: timestamp(),
     createdAt: timestamp().defaultNow().notNull(),

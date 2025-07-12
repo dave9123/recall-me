@@ -4,6 +4,7 @@ Why bother forgetting when you can remember?—am I right?
 
 ## To-do
 
+- [ ] Account linking
 - [ ] Support Slack
 - [ ] Support Discord
 - [ ] Support WhatsApp

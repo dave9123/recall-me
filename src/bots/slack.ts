@@ -1,9 +1,10 @@
 import { App } from "@slack/bolt";
 import { createLogger } from "../modules/logger";
 import db from "../modules/db";
-import { eq, or, arrayContained, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import updateAccountInfo from "../modules/updateAccountInfo";
 import { remindersTable, usersTable } from "../db/schema";
-
+import createRandomId from "../modules/createRandomId";
 const logger = createLogger("Slack");
 
 const app = new App({
@@ -18,15 +19,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
     try {
         await ack();
 
-        db.insert(usersTable).values({
-            uid: `slack-${body.user_id}`,
-            username: body.user_name,
-            provider: "slack",
-        }).onConflictDoUpdate({
-            target: usersTable.uid,
-            set: { username: body.user_name },
-            where: sql`${usersTable.username} IS DISTINCT FROM EXCLUDED.username`,
-        });
+        updateAccountInfo(body.user_id, body.user_name, "slack");
 
         client.views.open({
             trigger_id: body.trigger_id,
@@ -144,7 +137,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
 
 app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
     try {
-        if (Date.now()/1000 >= view["state"]["values"]["reminder_time"]!["time_input"]!["selected_date_time"]!) {
+        if (Date.now() / 1000 >= view["state"]["values"]["reminder_time"]!["time_input"]!["selected_date_time"]!) {
             await ack({
                 response_action: "errors",
                 errors: {
@@ -152,15 +145,31 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
                 }
             });
             return;
+        } else {
+            await ack();
         }
 
-        /*await db.insert(remindersTable).values({
-            ownerId: body.user.id,
-            title: view["state"]["values"]["reminder_title"]["title_input"]["value"],
-            description: view["state"]["values"]["reminder_description"]["description_input"]["value"] ?? null,
-            time: new Date(view["state"]["values"]["reminder_time"]["time_input"]["selected_date_time"]),
-            priority: view["state"]["values"]["reminder_priority"]["priority_input"]["selected_option"]["value"] ?? null,
-        });*/
+        updateAccountInfo(body.user.id, body.user.name, "slack");
+
+        const toInsert: {
+            uid: string;
+            ownerId: string;
+            title: string;
+            time: Date;
+            description?: string | undefined;
+            priority?: string | undefined;
+        } = {
+            uid: createRandomId(),
+            ownerId: `slack-${body.user.id}`,
+            title: view.state.values.reminder_title!.title_input!.value ?? "", //it should not be null but Bolt JS types being weird
+            time: new Date(
+                view.state.values.reminder_time!.time_input!.selected_date_time! * 1000
+            ),
+            description: view.state.values.reminder_description?.description_input?.value || undefined,
+            priority: view.state.values.reminder_priority?.priority_input?.selected_option?.value || undefined,
+        };
+
+        await db.insert(remindersTable).values(toInsert);
     } catch (error) {
         logger.error("Error handling reminder creation modal:", error);
     }
@@ -169,14 +178,19 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
 app.command("/reminder-list", async ({ ack, body, client }) => {
     try {
         await ack();
+        console.log(body);
+        updateAccountInfo(body.user_id, body.user_name, "slack");
 
-        /*const userId = Number(body.user_id);
+        const reminders = await db.select({
+            id: remindersTable.id,
+            title: remindersTable.title,
+            description: remindersTable.description,
+            time: remindersTable.time,
+            priority: remindersTable.priority
+        }).from(remindersTable)
+            .where(eq(remindersTable.ownerId, `slack-${body.user_id}`));
 
-        const reminders = await db.select().from(remindersTable)
-            .where(or(
-                eq(remindersTable.ownerId, userId),
-                arrayContained(remindersTable.sharedWith, [userId]),
-            ));*/
+        console.log(reminders);
 
         await client.views.open({
             trigger_id: body.trigger_id,
