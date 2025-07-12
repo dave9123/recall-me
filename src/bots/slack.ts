@@ -9,7 +9,7 @@ const logger = createLogger("Slack");
 const app = new App({
     token: process.env.SLACK_OAUTH_TOKEN,
     signingSecret: process.env.SLACK_SIGNING_SECRET,
-    socketMode: process.env.SLACK_SOCKET_MODE === "true" ? true : false,
+    socketMode: process.env.SLACK_SOCKET_MODE == "true" ? true : false,
     appToken: process.env.SLACK_APP_TOKEN,
     port: parseInt(process.env.SLACK_PORT || "3000", 10),
 });
@@ -17,6 +17,16 @@ const app = new App({
 app.command("/reminder-create", async ({ ack, body, client }) => {
     try {
         await ack();
+
+        db.insert(usersTable).values({
+            uid: `slack-${body.user_id}`,
+            username: body.user_name,
+            provider: "slack",
+        }).onConflictDoUpdate({
+            target: usersTable.uid,
+            set: { username: body.user_name },
+            where: sql`${usersTable.username} IS DISTINCT FROM EXCLUDED.username`,
+        });
 
         client.views.open({
             trigger_id: body.trigger_id,
@@ -127,16 +137,6 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                 },
             },
         });
-
-        await db.insert(usersTable).values({
-            uid: `slack-${body.user_id}`,
-            username: body.user_name,
-            provider: "slack",
-        }).onConflictDoUpdate({
-            target: usersTable.uid,
-            set: { username: body.user_name },
-            where: sql`${usersTable.username} IS DISTINCT FROM EXCLUDED.username`,
-        });
     } catch (error) {
         logger.error("Error handling /reminder-create command:", error);
     }
@@ -148,7 +148,7 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
             await ack({
                 response_action: "errors",
                 errors: {
-                    reminder_time: "Can't seem to remind you in the past unless I have access to a ⏳ time machine, please pick a time in the future!"
+                    reminder_time: "I can't remind you in the past unless I have access to a time machine, please pick a time in the future!"
                 }
             });
             return;
