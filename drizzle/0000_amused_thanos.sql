@@ -13,9 +13,9 @@ CREATE TABLE "reminders" (
 	"uid" varchar NOT NULL,
 	"ownerId" varchar NOT NULL,
 	"title" varchar NOT NULL,
+	"priority" integer,
 	"description" varchar,
 	"time" timestamp,
-	"sharedWith" varchar[] NOT NULL,
 	"createdAt" timestamp DEFAULT now() NOT NULL,
 	"updatedAt" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "reminders_uid_unique" UNIQUE("uid")

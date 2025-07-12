@@ -1,1 +1,0 @@
-ALTER TABLE "reminders" DROP COLUMN "sharedWith";

@@ -1,5 +1,5 @@
 {
-  "id": "8883e1a3-56f9-452d-b2d0-17e865d7e16e",
+  "id": "8a290597-1490-476d-a031-bf034abe3814",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -139,6 +139,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "priority": {
+          "name": "priority",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "description": {
           "name": "description",
           "type": "varchar",
@@ -150,12 +156,6 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
-        },
-        "sharedWith": {
-          "name": "sharedWith",
-          "type": "varchar[]",
-          "primaryKey": false,
-          "notNull": true
         },
         "createdAt": {
           "name": "createdAt",

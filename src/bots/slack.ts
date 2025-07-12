@@ -5,6 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import updateAccountInfo from "../modules/updateAccountInfo";
 import { remindersTable, usersTable } from "../db/schema";
 import createRandomId from "../modules/createRandomId";
+import priorityNumberConversion from "../modules/priorityNumberConversion";
 const logger = createLogger("Slack");
 
 const app = new App({
@@ -102,7 +103,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                                         text: "Low",
                                         emoji: true
                                     },
-                                    value: "low"
+                                    value: "Low"
                                 },
                                 {
                                     text: {
@@ -110,7 +111,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                                         text: "Medium",
                                         emoji: true
                                     },
-                                    value: "medium"
+                                    value: "Medium"
                                 },
                                 {
                                     text: {
@@ -118,7 +119,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                                         text: "High",
                                         emoji: true
                                     },
-                                    value: "high"
+                                    value: "High"
                                 }
                             ],
                         }
@@ -157,7 +158,7 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
             title: string;
             time: Date;
             description?: string | undefined;
-            priority?: string | undefined;
+            priority?: number | undefined;
         } = {
             uid: createRandomId(),
             ownerId: `slack-${body.user.id}`,
@@ -166,7 +167,7 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
                 view.state.values.reminder_time!.time_input!.selected_date_time! * 1000
             ),
             description: view.state.values.reminder_description?.description_input?.value || undefined,
-            priority: view.state.values.reminder_priority?.priority_input?.selected_option?.value || undefined,
+            priority: priorityNumberConversion(view.state.values.reminder_priority?.priority_input?.selected_option?.value as string) || undefined,
         };
 
         await db.insert(remindersTable).values(toInsert);
