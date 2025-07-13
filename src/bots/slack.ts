@@ -577,6 +577,33 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
             await ack();
         }
 
+        const reminder = await db.select().from(remindersTable)
+            .where(and(
+                eq(remindersTable.id, JSON.parse(body.view.private_metadata).reminder_id),
+                eq(remindersTable.ownerId, `slack-${body.user.id}`)
+            )).then(rows => rows[0]);
+        if (!reminder) {
+            await client.views.push({
+                trigger_id: body.trigger_id,
+                view: {
+                    type: "modal",
+                    callback_id: "error_modal",
+                    title: {
+                        type: "plain_text",
+                        text: "Error",
+                    },
+                    blocks: [
+                        {
+                            type: "section",
+                            text: {
+                                type: "mrkdwn",
+                                text: "The reminder you are trying to edit does not exist or you do not have permission to edit it.",
+                            },
+                        },
+                    ],
+                },
+            });
+
         await db.update(remindersTable)
             .set({
                 title: body.view.state.values.reminder_title!.title_input!.value as string,
@@ -635,13 +662,6 @@ app.action("delete_reminder", async ({ ack, body, client }) => {
             return;
         }
 
-        await db.delete(remindersTable).where(
-            and(
-                eq(remindersTable.id, reminderId),
-                eq(remindersTable.ownerId, `slack-${body.user.id}`)
-            )
-        );
-
         await client.views.push({
             trigger_id: body.trigger_id,
             view: {
@@ -658,21 +678,25 @@ app.action("delete_reminder", async ({ ack, body, client }) => {
                             type: "mrkdwn",
                             text: `Are you sure you want to delete the reminder *${reminder.title}*? This action cannot be undone.`,
                         },
-                        accessory: {
-                            type: "button",
-                            text: {
-                                type: "plain_text",
-                                text: "Delete",
+                    },
+                    {
+                        type: "actions",
+                        elements: [
+                            {
+                                type: "button",
+                                text: {
+                                    type: "plain_text",
+                                    text: "Confirm",
+                                },
+                                style: "danger",
+                                action_id: "confirm_delete_reminder",
+                                value: reminderId.toString(),
                             },
-                            style: "danger",
-                            value: JSON.stringify({ action: "confirm_delete", reminder_id: reminder.id }),
-                        },
+                        ],
                     },
                 ],
             },
         });
-
-        await updateReminderList(client, body, body.view);
     } catch (error) {
         logger.error("Error handling delete reminder action:", error);
     }
