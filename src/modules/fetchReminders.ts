@@ -15,8 +15,8 @@ export default async function fetchReminders(
             time: remindersTable.time,
             priority: remindersTable.priority,
         })
-            .from(remindersTable)
-            .where(eq(remindersTable.ownerId, `${provider}-${userId}`))
-            .orderBy(asc(remindersTable.time))
-            .limit(limit);
+        .from(remindersTable)
+        .where(eq(remindersTable.ownerId, `${provider}-${userId}`))
+        .orderBy(asc(remindersTable.time))
+        .limit(limit);
 }

@@ -7,6 +7,7 @@ Why bother forgetting when you can remember?—am I right?
 - [ ] Support Slack
     - [ ] Optimize code
     - [ ] Reminder remove command
+    - [ ] Reminder edit invalid_trigger_id bug
     - [ ] Account linking
     - [ ] Sort by option
 - [ ] Support Discord

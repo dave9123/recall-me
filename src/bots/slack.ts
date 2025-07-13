@@ -140,38 +140,26 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
 
 app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
     try {
-        updateAccountInfo(body.user.id, body.user.name, "slack");
+        const errors: Record<string, string> = {};
 
         if (view.state.values.reminder_title!.title_input!.value!.length > 128) {
-            await ack({
-                response_action: "errors",
-                errors: {
-                    reminder_title: "Title must be 128 characters or less!"
-                }
-            });
-            return;
+            errors.reminder_title = "Title must be 128 characters or less!";
         }
 
         if (view.state.values.reminder_description?.description_input?.value && view.state.values.reminder_description?.description_input?.value?.length > 1024) {
-            await ack({
-                response_action: "errors",
-                errors: {
-                    reminder_description: "Description must be 1024 characters or less!"
-                }
-            });
-            return;
+            errors.reminder_description = "Description must be 1024 characters or less!";
         }
 
         if (Date.now() / 1000 >= view["state"]["values"]["reminder_time"]!["time_input"]!["selected_date_time"]!) {
+            errors.reminder_time = "Please pick a time in the future!";
+        }
+
+        if (Object.keys(errors).length > 0) {
             await ack({
                 response_action: "errors",
-                errors: {
-                    reminder_time: "Please pick a time in the future!"
-                }
+                errors
             });
             return;
-        } else {
-            await ack();
         }
 
         updateAccountInfo(body.user.id, body.user.name, "slack");
@@ -245,142 +233,142 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
                             text: `Priority: ${reminder.priority ? ["High", "Medium", "Low"][reminder.priority - 1] : "None"}`,
                         }
                     );
-                    remindersList.push({
+                }
+                remindersList.push({
+                    type: "section",
+                    text: {
+                        type: "mrkdwn",
+                        text: `*${reminder.title}*${reminder.description ? `\n${reminder.description}` : ""}`,
+                    },
+                },
+                    {
+                        type: "context",
+                        elements: [
+                            /*{
+                                type: "plain_text",
+                                text: `ID: ${reminder.uid}`,
+                            },
+                            {
+                                type: "plain_text",
+                                text: `|`,
+                            },*/
+                            {
+                                type: "plain_text",
+                                text: `Time: ${reminder.time?.toUTCString()}`,
+                            },
+                            ...priorityContext,
+                        ],
+                    },
+                    {
+                        type: "actions",
+                        elements: [
+                            /*{
+                                type: "button",
+                                text: {
+                                    type: "plain_text",
+                                    text: "Mark as Done",
+                                },
+                                style: "primary",
+                                action_id: "mark_reminder_as_done",
+                                value: reminder.id.toString(),
+                            },
+                            {
+                                type: "button",
+                                text: {
+                                    type: "plain_text",
+                                    text: "Details",
+                                },
+                                action_id: "reminder_details",
+                                value: reminder.id.toString(),
+                            },*/
+                            {
+                                type: "button",
+                                text: {
+                                    type: "plain_text",
+                                    text: "Edit",
+                                },
+                                action_id: "edit_reminder",
+                                value: reminder.id.toString(),
+                            },
+                            {
+                                type: "button",
+                                text: {
+                                    type: "plain_text",
+                                    text: "Delete",
+                                },
+                                style: "danger",
+                                action_id: "delete_reminder",
+                                value: reminder.id.toString(),
+                            },
+                        ],
+                    },
+                    { type: "divider" }
+                );
+            }
+        }
+
+        await client.views.open({
+            trigger_id: body.trigger_id,
+            view: {
+                type: "modal",
+                callback_id: "list_reminders_modal",
+                title: {
+                    type: "plain_text",
+                    text: "Reminders List",
+                },
+                blocks: [
+                    /*{
                         type: "section",
                         text: {
                             type: "mrkdwn",
-                            text: `*${reminder.title}*${reminder.description ? `\n${reminder.description}` : ""}`,
+                            text: `Sort by:`,
+                        },
+                        accessory: {
+                            type: "static_select",
+                            action_id: "sort_reminders",
+                            placeholder: {
+                                type: "plain_text",
+                                text: "Select sorting option",
+                            },
+                            options: [
+                                {
+                                    text: {
+                                        type: "plain_text",
+                                        text: "Time",
+                                    },
+                                    value: "time",
+                                },
+                                {
+                                    text: {
+                                        type: "plain_text",
+                                        text: "Priority",
+                                    },
+                                    value: "priority",
+                                },
+                            ],
+                        },
+                    },*/
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: "Here are your reminders:",
                         },
                     },
-                        {
-                            type: "context",
-                            elements: [
-                                /*{
-                                    type: "plain_text",
-                                    text: `ID: ${reminder.uid}`,
-                                },
-                                {
-                                    type: "plain_text",
-                                    text: `|`,
-                                },*/
-                                {
-                                    type: "plain_text",
-                                    text: `Time: ${reminder.time?.toUTCString()}`,
-                                },
-                                ...priorityContext,
-                            ],
-                        },
-                        {
-                            type: "actions",
-                            elements: [
-                                /*{
-                                    type: "button",
-                                    text: {
-                                        type: "plain_text",
-                                        text: "Mark as Done",
-                                    },
-                                    style: "primary",
-                                    action_id: "mark_reminder_as_done",
-                                    value: reminder.id.toString(),
-                                },
-                                {
-                                    type: "button",
-                                    text: {
-                                        type: "plain_text",
-                                        text: "Details",
-                                    },
-                                    action_id: "reminder_details",
-                                    value: reminder.id.toString(),
-                                },*/
-                                {
-                                    type: "button",
-                                    text: {
-                                        type: "plain_text",
-                                        text: "Edit",
-                                    },
-                                    action_id: "edit_reminder",
-                                    value: reminder.id.toString(),
-                                },
-                                {
-                                    type: "button",
-                                    text: {
-                                        type: "plain_text",
-                                        text: "Delete",
-                                    },
-                                    style: "danger",
-                                    action_id: "delete_reminder",
-                                    value: reminder.id.toString(),
-                                },
-                            ],
-                        },
-                        { type: "divider" }
-                    );
-                }
-            }
-
-            await client.views.open({
-                trigger_id: body.trigger_id,
-                view: {
-                    type: "modal",
-                    callback_id: "list_reminders_modal",
-                    title: {
-                        type: "plain_text",
-                        text: "Reminders List",
-                    },
-                    blocks: [
-                        /*{
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: `Sort by:`,
+                    { type: "divider", },
+                    ...remindersList,
+                    /*{
+                        type: "context",
+                        elements: [
+                            {
+                                type: "plain_text",
+                                text: `Page 1 of 1`,
                             },
-                            accessory: {
-                                type: "static_select",
-                                action_id: "sort_reminders",
-                                placeholder: {
-                                    type: "plain_text",
-                                    text: "Select sorting option",
-                                },
-                                options: [
-                                    {
-                                        text: {
-                                            type: "plain_text",
-                                            text: "Time",
-                                        },
-                                        value: "time",
-                                    },
-                                    {
-                                        text: {
-                                            type: "plain_text",
-                                            text: "Priority",
-                                        },
-                                        value: "priority",
-                                    },
-                                ],
-                            },
-                        },*/
-                        {
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: "Here are your reminders:",
-                            },
-                        },
-                        { type: "divider", },
-                        ...remindersList,
-                        /*{
-                            type: "context",
-                            elements: [
-                                {
-                                    type: "plain_text",
-                                    text: `Page 1 of 1`,
-                                },
-                            ],
-                        }*/
-                    ],
-                },
-            });
-        }
+                        ],
+                    }*/
+                ],
+            },
+        });
     } catch (error) {
         logger.error("Error handling /reminder-list command:", error);
     }
@@ -389,8 +377,6 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
 app.action("edit_reminder", async ({ ack, body, client }) => {
     try {
         await ack();
-        
-        console.log(body);
 
         updateAccountInfo(body.user.id, body.user.username, "slack");
 
@@ -553,8 +539,6 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
     try {
         const errors: Record<string, string> = {};
 
-        updateAccountInfo(body.user.id, body.user.username, "slack");
-
         if (body.view.state.values.reminder_title!.title_input!.value!.length > 128) {
             errors.reminder_title = "Title must be 128 characters or less!";
         }
@@ -606,6 +590,34 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
             return;
         }
 
+        if (!reminder) {
+            await ack({
+                response_action: "push",
+                view: {
+                    type: "modal",
+                    callback_id: "error_modal",
+                    title: {
+                        type: "plain_text",
+                        text: "Error",
+                    },
+                    blocks: [
+                        {
+                            type: "section",
+                            text: {
+                                type: "mrkdwn",
+                                text: "The reminder you are trying to edit does not exist or you do not have permission to edit it.",
+                            },
+                        },
+                    ],
+                },
+            });
+            return;
+        }
+
+        await ack();
+
+        updateAccountInfo(body.user.id, body.user.username, "slack");
+
         await db.update(remindersTable)
             .set({
                 title: body.view.state.values.reminder_title!.title_input!.value as string,
@@ -619,7 +631,8 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
                     eq(remindersTable.id, JSON.parse(body.view.private_metadata).reminder_id),
                     eq(remindersTable.ownerId, `slack-${body.user.id}`)
                 )
-            );
+            ).then((res) => {
+            });
 
         await updateReminderList(client, body, view);
     } catch (error) {
@@ -704,40 +717,48 @@ app.action("delete_reminder", async ({ ack, body, client }) => {
     }
 });
 
+app.view("delete_reminder_confirmation", async ({ ack, body, view, client }) => {
+    try {
+        await ack();
+    } catch (error) {
+        logger.error("Error handling delete reminder confirmation view:", error);
+    }
+});
+
 async function updateReminderList(client: AllMiddlewareArgs<SlackViewAction>["client"], body: SlackViewMiddlewareArgs["body"], view: SlackViewAction["view"]) {
     const reminders = await fetchReminders(body.user.id, "slack", 5);
 
-        const newBlocks = [
-            { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
-            { type: "divider" },
-            ...reminders.flatMap(reminder => {
-                const ctx: any[] = [
-                    { type: "plain_text", text: `Time: ${reminder.time.toUTCString()}` }
-                ];
-                if (reminder.priority != null) {
-                    ctx.push(
-                        { type: "plain_text", text: "|" },
-                        { type: "plain_text", text: `Priority: ${["High", "Medium", "Low"][reminder.priority - 1]}` }
-                    );
-                }
-                return [
-                    { type: "section", text: { type: "mrkdwn", text: `*${reminder.title}*${reminder.description ? `\n${reminder.description}` : ""}` } },
-                    { type: "context", elements: ctx },
-                    { type: "divider" }
-                ];
-            })
-        ];
+    const newBlocks = [
+        { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
+        { type: "divider" },
+        ...reminders.flatMap(reminder => {
+            const ctx: any[] = [
+                { type: "plain_text", text: `Time: ${reminder.time.toUTCString()}` }
+            ];
+            if (reminder.priority != null) {
+                ctx.push(
+                    { type: "plain_text", text: "|" },
+                    { type: "plain_text", text: `Priority: ${["High", "Medium", "Low"][reminder.priority - 1]}` }
+                );
+            }
+            return [
+                { type: "section", text: { type: "mrkdwn", text: `*${reminder.title}*${reminder.description ? `\n${reminder.description}` : ""}` } },
+                { type: "context", elements: ctx },
+                { type: "divider" }
+            ];
+        })
+    ];
 
-        await client.views.update({
-            view_id: JSON.parse(view.private_metadata).parent_view_id,
-            hash: JSON.parse(view.private_metadata).parent_view_hash,
-            view: {
-                type: "modal",
-                callback_id: "list_reminders_modal",
-                title: { type: "plain_text", text: "Reminders List" },
-                blocks: newBlocks,
-            },
-        });
+    await client.views.update({
+        view_id: JSON.parse(view.private_metadata).parent_view_id,
+        hash: JSON.parse(view.private_metadata).parent_view_hash,
+        view: {
+            type: "modal",
+            callback_id: "list_reminders_modal",
+            title: { type: "plain_text", text: "Reminders List" },
+            blocks: newBlocks,
+        },
+    });
 }
 
 export default async function startBot() {
