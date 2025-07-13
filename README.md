@@ -4,14 +4,16 @@ Why bother forgetting when you can remember?—am I right?
 
 ## To-do
 
+- [ ] Optimize code
 - [ ] Account linking
+- [ ] Sort by
 - [ ] Support Slack
 - [ ] Support Discord
 - [ ] Support WhatsApp
 - [ ] Support Zulip
 - [ ] Support Signal
 - [ ] Support Matrix
-- [ ] Make web version
+- [ ] Web version along with [ReminderAPI](https://reminderapi.dave9123.me/)
 
 ## Notes
 
