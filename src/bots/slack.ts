@@ -603,6 +603,8 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
                     ],
                 },
             });
+            return;
+        }
 
         await db.update(remindersTable)
             .set({
