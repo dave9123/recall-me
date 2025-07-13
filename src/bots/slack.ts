@@ -31,6 +31,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
                     type: "plain_text",
                     text: "Create Reminder",
                 },
+                private_metadata: JSON.stringify({ channel_id: body.channel_id }),
                 blocks: [
                     {
                         type: "input",
@@ -195,8 +196,18 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
         };
 
         await db.insert(remindersTable).values(toInsert);
+        await client.chat.postEphemeral({
+            channel: JSON.parse(view.private_metadata).channel_id,
+            user: body.user.id,
+            text: "Reminder created successfully!",
+        });
     } catch (error) {
         logger.error("Error handling reminder creation modal:", error);
+        await client.chat.postEphemeral({
+            channel: JSON.parse(view.private_metadata).channel_id,
+            user: body.user.id,
+            text: "Failed to create reminder. Please try again later.",
+        });
     }
 });
 
@@ -313,9 +324,8 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
                                 },
                             ],
                         },
-                        {
-                            type: "divider",
-                        });
+                        { type: "divider" }
+                    );
                 }
             }
 
@@ -367,9 +377,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
                                 text: "Here are your reminders:",
                             },
                         },
-                        {
-                            type: "divider",
-                        },
+                        { type: "divider", },
                         ...remindersList,
                         /*{
                             type: "context",
@@ -402,7 +410,7 @@ app.action("edit_reminder", async ({ ack, body, client }) => {
             )).then(rows => rows[0]);
 
         if (!reminder) {
-            await client.views.open({
+            await client.views.push({
                 trigger_id: body.trigger_id,
                 view: {
                     type: "modal",
@@ -434,6 +442,7 @@ app.action("edit_reminder", async ({ ack, body, client }) => {
                     type: "plain_text",
                     text: "Edit Reminder",
                 },
+                private_metadata: JSON.stringify({ parent_view_id: body.view.id }),
                 blocks: [
                     {
                         type: "input",
@@ -549,7 +558,7 @@ app.action("edit_reminder", async ({ ack, body, client }) => {
     }
 });
 
-app.view("edit_reminder_modal", async ({ ack, body, client }) => {
+app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
     try {
         const errors: Record<string, string> = {};
 
@@ -591,6 +600,52 @@ app.view("edit_reminder_modal", async ({ ack, body, client }) => {
                     eq(remindersTable.ownerId, `slack-${body.user.id}`)
                 )
             );
+
+        const updated = await db
+            .select({
+                id: remindersTable.id,
+                title: remindersTable.title,
+                description: remindersTable.description,
+                time: remindersTable.time,
+                priority: remindersTable.priority,
+            })
+            .from(remindersTable)
+            .where(eq(remindersTable.ownerId, `slack-${body.user.id}`))
+            .orderBy(asc(remindersTable.time))
+            .limit(5);
+
+        const newBlocks = [
+            { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
+            { type: "divider" },
+            ...updated.flatMap(reminder => {
+                const ctx: any[] = [
+                    { type: "plain_text", text: `Time: ${reminder.time.toUTCString()}` }
+                ];
+                if (reminder.priority != null) {
+                    ctx.push(
+                        { type: "plain_text", text: "|" },
+                        { type: "plain_text", text: `Priority: ${["High", "Medium", "Low"][reminder.priority - 1]}` }
+                    );
+                }
+                return [
+                    { type: "section", text: { type: "mrkdwn", text: `*${reminder.title}*${reminder.description ? `\n${reminder.description}` : ""}` } },
+                    { type: "context", elements: ctx },
+                    { type: "divider" }
+                ];
+            })
+        ];
+
+        const parent = JSON.parse(view.private_metadata).parent_view_id;
+        await client.views.update({
+            view_id: parent,
+            hash: view.root_view.hash,
+            view: {
+                type: "modal",
+                callback_id: "list_reminders_modal",
+                title: { type: "plain_text", text: "Reminders List" },
+                blocks: newBlocks,
+            },
+        });
     } catch (error) {
         logger.error("Error handling edit reminder action:", error);
     }
