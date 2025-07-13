@@ -4,10 +4,11 @@ Why bother forgetting when you can remember?—am I right?
 
 ## To-do
 
-- [ ] Optimize code
-- [ ] Account linking
-- [ ] Sort by
 - [ ] Support Slack
+    - [ ] Optimize code
+    - [ ] Reminder remove command
+    - [ ] Account linking
+    - [ ] Sort by option
 - [ ] Support Discord
 - [ ] Support WhatsApp
 - [ ] Support Zulip

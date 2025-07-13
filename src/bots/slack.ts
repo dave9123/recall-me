@@ -1,11 +1,12 @@
-import { App } from "@slack/bolt";
+import { AllMiddlewareArgs, App, SlackViewAction, SlackViewMiddlewareArgs } from "@slack/bolt";
 import { createLogger } from "../modules/logger";
 import db from "../modules/db";
 import { eq, and, asc } from "drizzle-orm";
 import updateAccountInfo from "../modules/updateAccountInfo";
-import { remindersTable, usersTable } from "../db/schema";
+import { remindersTable } from "../db/schema";
 import createRandomId from "../modules/createRandomId";
 import priorityNumberConversion from "../modules/priorityNumberConversion";
+import fetchReminders from "../modules/fetchReminders";
 const logger = createLogger("Slack");
 
 const app = new App({
@@ -217,19 +218,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
 
         updateAccountInfo(body.user_id, body.user_name, "slack");
 
-        const reminders = await db
-            .select({
-                id: remindersTable.id,
-                title: remindersTable.title,
-                description: remindersTable.description,
-                time: remindersTable.time,
-                priority: remindersTable.priority,
-                createdAt: remindersTable.createdAt,
-            })
-            .from(remindersTable)
-            .where(eq(remindersTable.ownerId, `slack-${body.user_id}`))
-            .orderBy(asc(remindersTable.time))
-            .limit(5);
+        const reminders = await fetchReminders(body.user_id, "slack", 5);
 
         let remindersList = [];
         if (reminders.length === 0) {
@@ -400,6 +389,8 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
 app.action("edit_reminder", async ({ ack, body, client }) => {
     try {
         await ack();
+        
+        console.log(body);
 
         updateAccountInfo(body.user.id, body.user.username, "slack");
 
@@ -442,7 +433,7 @@ app.action("edit_reminder", async ({ ack, body, client }) => {
                     type: "plain_text",
                     text: "Edit Reminder",
                 },
-                private_metadata: JSON.stringify({ parent_view_id: body.view.id }),
+                private_metadata: JSON.stringify({ parent_view_id: body.view.id, parent_view_hash: body.view.hash }),
                 blocks: [
                     {
                         type: "input",
@@ -596,28 +587,26 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
                     : null,
             }).where(
                 and(
-                    eq(remindersTable.id, body.view.private_metadata.reminder_id),
+                    eq(remindersTable.id, JSON.parse(body.view.private_metadata).reminder_id),
                     eq(remindersTable.ownerId, `slack-${body.user.id}`)
                 )
             );
 
-        const updated = await db
-            .select({
-                id: remindersTable.id,
-                title: remindersTable.title,
-                description: remindersTable.description,
-                time: remindersTable.time,
-                priority: remindersTable.priority,
-            })
-            .from(remindersTable)
-            .where(eq(remindersTable.ownerId, `slack-${body.user.id}`))
-            .orderBy(asc(remindersTable.time))
-            .limit(5);
+        await updateReminderList(client, body, view);
+    } catch (error) {
+        logger.error("Error handling edit reminder action:", error);
+    }
+});
+
+
+
+async function updateReminderList(client: AllMiddlewareArgs<SlackViewAction>["client"], body: SlackViewMiddlewareArgs["body"], view: SlackViewAction["view"]) {
+    const reminders = await fetchReminders(body.user.id, "slack", 5);
 
         const newBlocks = [
             { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
             { type: "divider" },
-            ...updated.flatMap(reminder => {
+            ...reminders.flatMap(reminder => {
                 const ctx: any[] = [
                     { type: "plain_text", text: `Time: ${reminder.time.toUTCString()}` }
                 ];
@@ -635,10 +624,9 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
             })
         ];
 
-        const parent = JSON.parse(view.private_metadata).parent_view_id;
         await client.views.update({
-            view_id: parent,
-            hash: view.root_view.hash,
+            view_id: JSON.parse(view.private_metadata).parent_view_id,
+            hash: JSON.parse(view.private_metadata).parent_view_hash,
             view: {
                 type: "modal",
                 callback_id: "list_reminders_modal",
@@ -646,10 +634,7 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
                 blocks: newBlocks,
             },
         });
-    } catch (error) {
-        logger.error("Error handling edit reminder action:", error);
-    }
-});
+}
 
 export default async function startBot() {
     try {
