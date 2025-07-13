@@ -6,7 +6,6 @@ export default async function fetchReminders(
     userId: string,
     provider: string,
     limit: number = 5
-    }
 ) {
     return await db
         .select({

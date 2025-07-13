@@ -598,7 +598,85 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
     }
 });
 
+app.action("delete_reminder", async ({ ack, body, client }) => {
+    try {
+        await ack();
 
+        updateAccountInfo(body.user.id, body.user.username, "slack");
+
+        const reminderId = Number(body.actions[0].value);
+        const reminder = await db.select().from(remindersTable)
+            .where(and(
+                eq(remindersTable.id, reminderId),
+                eq(remindersTable.ownerId, `slack-${body.user.id}`)
+            )).then(rows => rows[0]);
+
+        if (!reminder) {
+            await client.views.push({
+                trigger_id: body.trigger_id,
+                view: {
+                    type: "modal",
+                    callback_id: "error_modal",
+                    title: {
+                        type: "plain_text",
+                        text: "Error",
+                    },
+                    blocks: [
+                        {
+                            type: "section",
+                            text: {
+                                type: "mrkdwn",
+                                text: "The reminder you are trying to delete does not exist or you do not have permission to delete it.",
+                            },
+                        },
+                    ],
+                },
+            });
+            return;
+        }
+
+        await db.delete(remindersTable).where(
+            and(
+                eq(remindersTable.id, reminderId),
+                eq(remindersTable.ownerId, `slack-${body.user.id}`)
+            )
+        );
+
+        await client.views.push({
+            trigger_id: body.trigger_id,
+            view: {
+                type: "modal",
+                callback_id: "delete_reminder_confirmation",
+                title: {
+                    type: "plain_text",
+                    text: "Delete Reminder?",
+                },
+                blocks: [
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: `Are you sure you want to delete the reminder *${reminder.title}*? This action cannot be undone.`,
+                        },
+                        accessory: {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: "Delete",
+                            },
+                            style: "danger",
+                            value: JSON.stringify({ action: "confirm_delete", reminder_id: reminder.id }),
+                        },
+                    },
+                ],
+            },
+        });
+
+        await updateReminderList(client, body, body.view);
+    } catch (error) {
+        logger.error("Error handling delete reminder action:", error);
+    }
+});
 
 async function updateReminderList(client: AllMiddlewareArgs<SlackViewAction>["client"], body: SlackViewMiddlewareArgs["body"], view: SlackViewAction["view"]) {
     const reminders = await fetchReminders(body.user.id, "slack", 5);
