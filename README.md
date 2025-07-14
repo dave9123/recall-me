@@ -1,13 +1,13 @@
 # Recall Me
 
-Why bother forgetting when you can remember?—am I right?
+Why bother forgetting when you can remember?—am I right? This bot literally reminds you through the social media(s) you already use.
 
 ## To-do
 
 - [ ] Support Slack
     - [ ] Optimize code
     - [ ] Reminder remove command
-    - [ ] Reminder edit invalid_trigger_id bug
+    - [ ] Reminder edit command
     - [ ] Account linking
     - [ ] Sort by option
 - [ ] Support Discord

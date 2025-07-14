@@ -5,7 +5,7 @@ import { eq, asc } from "drizzle-orm";
 export default async function fetchReminders(
     userId: string,
     provider: string,
-    limit: number = 5
+    limit: number = Number(process.env.REMINDER_LIMIT) || 5
 ) {
     return await db
         .select({

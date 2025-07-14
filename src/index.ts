@@ -1,5 +1,5 @@
 import "dotenv/config";
-import slackBot from "./bots/slack";
+import { startBot as slackBot } from "./bots/slack";
 
 (async () => {
     slackBot();

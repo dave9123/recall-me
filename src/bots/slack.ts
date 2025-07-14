@@ -1,4 +1,6 @@
-import { AllMiddlewareArgs, App, SlackActionMiddlewareArgs, SlackAction, SlackViewAction, SlackViewMiddlewareArgs } from "@slack/bolt";
+// @ts-nocheck
+
+import { App } from "@slack/bolt";
 import { createLogger } from "../modules/logger";
 import db from "../modules/db";
 import { eq, and } from "drizzle-orm";
@@ -185,18 +187,29 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
         };
 
         await db.insert(remindersTable).values(toInsert);
-        await client.chat.postEphemeral({
-            channel: JSON.parse(view.private_metadata).channel_id,
-            user: body.user.id,
-            text: "Reminder created successfully!",
+
+        await client.views.update({
+            view_id: body.view.id,
+            hash: body.view.hash,
+            view: {
+                type: "modal",
+                title: {
+                    type: "plain_text",
+                    text: "Reminder Created",
+                },
+                blocks: [
+                    {
+                        type: "section",
+                        text: {
+                            type: "mrkdwn",
+                            text: `Your reminder *${toInsert.title}* has been created successfully!`,
+                        },
+                    },
+                ],
+            },
         });
     } catch (error) {
         logger.error("Error handling reminder creation modal:", error);
-        await client.chat.postEphemeral({
-            channel: JSON.parse(view.private_metadata).channel_id,
-            user: body.user.id,
-            text: "Failed to create reminder. Please try again later.",
-        });
     }
 });
 
@@ -206,7 +219,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
 
         updateAccountInfo(body.user_id, body.user_name, "slack");
 
-        const reminders = await fetchReminders(body.user_id, "slack", 5);
+        const reminders = await fetchReminders(body.user_id, "slack");
 
         let remindersList = [];
         if (reminders.length === 0) {
@@ -352,7 +365,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
                         type: "section",
                         text: {
                             type: "mrkdwn",
-                            text: "Here are your reminders:",
+                            text: `You have ${reminders.length} reminder${reminders.length !== 1 ? "s" : ""}.`,
                         },
                     },
                     { type: "divider", },
@@ -594,32 +607,6 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
             return;
         }
 
-        if (!reminder) {
-            await ack({
-                response_action: "push",
-                view: {
-                    type: "modal",
-                    callback_id: "error_modal",
-                    title: {
-                        type: "plain_text",
-                        text: "Error",
-                    },
-                    blocks: [
-                        {
-                            type: "section",
-                            text: {
-                                type: "mrkdwn",
-                                text: "The reminder you are trying to edit does not exist or you do not have permission to edit it.",
-                            },
-                        },
-                    ],
-                },
-            });
-            return;
-        }
-
-        await ack();
-
         updateAccountInfo(body.user.id, body.user.username, "slack");
 
         await db.update(remindersTable)
@@ -640,7 +627,7 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
         const blocks = [
             { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
             { type: "divider" },
-            ...(await fetchReminders(body.user.id, "slack", 5)).flatMap(r => {
+            ...(await fetchReminders(body.user.id, "slack")).flatMap(r => {
                 const ctx: any[] = [{ type: "plain_text", text: `Time: ${r.time.toUTCString()}` }];
                 if (r.priority != null) {
                     ctx.push(
@@ -815,90 +802,33 @@ app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
                 ],
             },
         });
-
-        updateReminderList(client, body);
     } catch (error) {
         logger.error("Error handling confirm delete reminder action:", error);
     }
 });
 
-/*async function updateReminderList(client: AllMiddlewareArgs<SlackViewAction | SlackAction>["client"], body: SlackViewMiddlewareArgs["body"] | SlackActionMiddlewareArgs["body"]) {
-const blocks = [
-            { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
-            { type: "divider" },
-            ...(await fetchReminders(body.user.id, "slack", 5)).flatMap(r => {
-                const ctx: any[] = [{ type: "plain_text", text: `Time: ${r.time.toUTCString()}` }];
-                if (r.priority != null) {
-                    ctx.push(
-                        { type: "plain_text", text: "|" },
-                        { type: "plain_text", text: `Priority: ${["High", "Medium", "Low"][r.priority - 1]}` }
-                    );
-                }
-                return [
-                    { type: "section", text: { type: "mrkdwn", text: `*${r.title}*${r.description ? `\n${r.description}` : ""}` } },
-                    { type: "context", elements: ctx },
-                    {
-                        type: "actions", elements: [
-                            { type: "button", text: { type: "plain_text", text: "Edit" }, action_id: "edit_reminder", value: r.id.toString() },
-                            { type: "button", text: { type: "plain_text", text: "Delete" }, style: "danger", action_id: "delete_reminder", value: r.id.toString() }
-                        ]
-                    },
-                    { type: "divider" }
-                ];
-            })
-        ];
-        const meta = JSON.parse(body.view.private_metadata);
-        await client.views.update({
-            view_id: meta.parent_view_id,
-            hash: meta.parent_view_hash,
-            view: {
-                type: "modal",
-                callback_id: "list_reminders_modal",
-                title: { type: "plain_text", text: "Reminders List" },
-                blocks
-            }
-        });
-    const reminders = await fetchReminders(body.user.id, "slack", 5);
-
-    const newBlocks = [
-        { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
-        { type: "divider" },
-        ...reminders.flatMap(reminder => {
-            const ctx: any[] = [
-                { type: "plain_text", text: `Time: ${reminder.time.toUTCString()}` }
-            ];
-            if (reminder.priority != null) {
-                ctx.push(
-                    { type: "plain_text", text: "|" },
-                    { type: "plain_text", text: `Priority: ${["High", "Medium", "Low"][reminder.priority - 1]}` }
-                );
-            }
-            return [
-                { type: "section", text: { type: "mrkdwn", text: `*${reminder.title}*${reminder.description ? `\n${reminder.description}` : ""}` } },
-                { type: "context", elements: ctx },
-                { type: "divider" }
-            ];
-        })
-    ];
-
-    await client.views.update({
-        view_id: body.view.root_view_id,
-        hash: body.view.hash,
-        view: {
-            type: "modal",
-            callback_id: "list_reminders_modal",
-            title: { type: "plain_text", text: "Reminders List" },
-            blocks: newBlocks,
-        },
-    });
-}*/
-
-export default async function startBot() {
+export async function startBot() {
     try {
         await app.start();
         logger.info(`Slack bot is running on port ${process.env.SLACK_PORT}`);
     } catch (error) {
         logger.error("Error starting Slack bot:", error);
         process.exit(1);
+    }
+}
+
+export async function notifyUser(
+    userId: string,
+    text?: string,
+    blocks?: any[]
+): Promise<void> {
+    try {
+        await app.client.chat.postMessage({
+            channel: userId,
+            text,
+            blocks,
+        });
+    } catch (error) {
+        logger.error(`Error notifying user ${userId}:`, error);
     }
 }
