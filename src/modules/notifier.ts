@@ -6,6 +6,8 @@ import { notifyUser as slackNotify } from "../bots/slack"
 
 const logger = createLogger("Notifier");
 
+logger.info("Notifier started!")
+
 setInterval(async () => {
     try {
         const reminders = await db.select()
