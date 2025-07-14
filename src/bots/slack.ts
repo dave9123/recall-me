@@ -164,6 +164,8 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
             return;
         }
 
+        await ack();
+
         updateAccountInfo(body.user.id, body.user.name, "slack");
 
         const toInsert: {
@@ -187,27 +189,6 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
         };
 
         await db.insert(remindersTable).values(toInsert);
-
-        await client.views.update({
-            view_id: body.view.id,
-            hash: body.view.hash,
-            view: {
-                type: "modal",
-                title: {
-                    type: "plain_text",
-                    text: "Reminder Created",
-                },
-                blocks: [
-                    {
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: `Your reminder *${toInsert.title}* has been created successfully!`,
-                        },
-                    },
-                ],
-            },
-        });
     } catch (error) {
         logger.error("Error handling reminder creation modal:", error);
     }
@@ -796,7 +777,7 @@ app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
                         type: "section",
                         text: {
                             type: "mrkdwn",
-                            text: `The reminder *${reminder.title}* has been successfully deleted.`,
+                            text: `The reminder has been successfully deleted.`,
                         },
                     },
                 ],
