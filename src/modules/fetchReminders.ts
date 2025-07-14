@@ -1,6 +1,6 @@
 import db from "./db";
-import { remindersTable } from "../db/schema";
-import { eq, asc } from "drizzle-orm";
+import { notifiedTable, remindersTable } from "../db/schema";
+import { eq, asc, and, notExists } from "drizzle-orm";
 
 export default async function fetchReminders(
     userId: string,
@@ -16,7 +16,14 @@ export default async function fetchReminders(
             priority: remindersTable.priority,
         })
         .from(remindersTable)
-        .where(eq(remindersTable.ownerId, `${provider}-${userId}`))
+        .where(and(
+            eq(remindersTable.ownerId, `${provider}-${userId}`),
+            notExists(
+                db.select()
+                    .from(notifiedTable)
+                    .where(eq(notifiedTable.reminderId, remindersTable.id))
+            )
+        ))
         .orderBy(asc(remindersTable.time))
         .limit(limit);
 }

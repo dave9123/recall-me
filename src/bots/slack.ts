@@ -5,7 +5,7 @@ import { createLogger } from "../modules/logger";
 import db from "../modules/db";
 import { eq, and } from "drizzle-orm";
 import updateAccountInfo from "../modules/updateAccountInfo";
-import { remindersTable } from "../db/schema";
+import { notifiedTable, remindersTable } from "../db/schema";
 import createRandomId from "../modules/createRandomId";
 import priorityNumberConversion from "../modules/priorityNumberConversion";
 import fetchReminders from "../modules/fetchReminders";
@@ -756,6 +756,10 @@ app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
             });
             return;
         }
+
+        await db.delete(notifiedTable)
+            .where(eq(notifiedTable.reminderId, reminderId))
+
         await db.delete(remindersTable)
             .where(and(
                 eq(remindersTable.id, reminderId),

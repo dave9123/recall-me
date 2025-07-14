@@ -1,6 +1,6 @@
 import db from "./db";
 import { remindersTable, notifiedTable } from "../db/schema";
-import { lte, and, notExists } from "drizzle-orm";
+import { lte, and, ne, eq, notExists } from "drizzle-orm";
 import { createLogger } from "./logger";
 import { notifyUser as slackNotify } from "../bots/slack"
 
@@ -19,19 +19,22 @@ setInterval(async () => {
                         db.select().from(notifiedTable)
                             .where(
                                 and(
-                                    lte(notifiedTable.reminderId, remindersTable.id),
-                                    lte(notifiedTable.userId, remindersTable.ownerId)
+                                    eq(notifiedTable.reminderId, remindersTable.id),
+                                    eq(notifiedTable.userId, remindersTable.ownerId)
                                 )
                             )
                     )
                 )
             );
+
+        logger.info(`Found ${reminders.length} reminder${reminders.length > 1 ? "s": ""}`);
+        
         for (const reminder of reminders) {
             let priorityContext = [];
             if (reminder.priority) {
                 priorityContext.push({
                     type: "plain_text",
-                    text: `Priority: ${reminder.priority}`
+                    text: `Priority: ${reminder.priority ? ["High", "Medium", "Low"][reminder.priority - 1] : "None"}`
                 });
             }
             await slackNotify(reminder.ownerId.replace("slack-", ""), reminder.title, [
@@ -50,6 +53,10 @@ setInterval(async () => {
                             type: "plain_text",
                             text: `Created at ${reminder.createdAt?.toUTCString()}`
                         },
+                        {
+                            type: "plain_text",
+                            text: `Time: ${reminder.time?.toUTCString()}`
+                        }
                     ]
                 }
             ]);

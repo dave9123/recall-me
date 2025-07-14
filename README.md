@@ -9,6 +9,7 @@ Why bother forgetting when you can remember?—am I right? This bot literally re
     - [ ] Reminder remove command
     - [ ] Reminder edit command
     - [ ] Account linking
+    - [ ] Pagination
     - [ ] Sort by option
 - [ ] Support Discord
 - [ ] Support WhatsApp
