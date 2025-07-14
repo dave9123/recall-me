@@ -605,6 +605,7 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
                 )
             );
 
+        await updateReminderList(body, client);
         const blocks = [
             { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
             { type: "divider" },
@@ -691,6 +692,11 @@ app.action("delete_reminder", async ({ ack, body, client }) => {
                     type: "plain_text",
                     text: "Delete Reminder?",
                 },
+                private_metadata: JSON.stringify({
+                    parent_view_id: body.view.id,
+                    parent_view_hash: body.view.hash,
+                    reminder_id: reminder.id
+                }),
                 blocks: [
                     {
                         type: "section",
@@ -787,10 +793,50 @@ app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
                 ],
             },
         });
+
+        await updateReminderList(body, client);
     } catch (error) {
         logger.error("Error handling confirm delete reminder action:", error);
     }
 });
+
+async function updateReminderList(body, client) {
+    const blocks = [
+            { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
+            { type: "divider" },
+            ...(await fetchReminders(body.user.id, "slack")).flatMap(r => {
+                const ctx: any[] = [{ type: "plain_text", text: `Time: ${r.time.toUTCString()}` }];
+                if (r.priority != null) {
+                    ctx.push(
+                        { type: "plain_text", text: "|" },
+                        { type: "plain_text", text: `Priority: ${["High", "Medium", "Low"][r.priority - 1]}` }
+                    );
+                }
+                return [
+                    { type: "section", text: { type: "mrkdwn", text: `*${r.title}*${r.description ? `\n${r.description}` : ""}` } },
+                    { type: "context", elements: ctx },
+                    {
+                        type: "actions", elements: [
+                            { type: "button", text: { type: "plain_text", text: "Edit" }, action_id: "edit_reminder", value: r.id.toString() },
+                            { type: "button", text: { type: "plain_text", text: "Delete" }, style: "danger", action_id: "delete_reminder", value: r.id.toString() }
+                        ]
+                    },
+                    { type: "divider" }
+                ];
+            })
+        ];
+        const meta = JSON.parse(body.view.private_metadata);
+        await client.views.update({
+            view_id: meta.parent_view_id,
+            hash: meta.parent_view_hash,
+            view: {
+                type: "modal",
+                callback_id: "list_reminders_modal",
+                title: { type: "plain_text", text: "Reminders List" },
+                blocks
+            }
+        });
+}
 
 export async function startBot() {
     try {

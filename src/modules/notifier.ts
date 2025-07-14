@@ -27,8 +27,10 @@ setInterval(async () => {
                 )
             );
 
-        logger.info(`Found ${reminders.length} reminder${reminders.length > 1 ? "s": ""}`);
-        
+        if (reminders.length > 0) {
+            logger.info(`Found ${reminders.length} reminder${reminders.length > 1 ? "s" : ""}`);
+        }
+
         for (const reminder of reminders) {
             let priorityContext = [];
             if (reminder.priority) {
@@ -49,10 +51,12 @@ setInterval(async () => {
                     type: "context",
                     elements: [
                         ...priorityContext,
+                        { type: "divider" },
                         {
                             type: "plain_text",
                             text: `Created at ${reminder.createdAt?.toUTCString()}`
                         },
+                        { type: "divider" },
                         {
                             type: "plain_text",
                             text: `Time: ${reminder.time?.toUTCString()}`
