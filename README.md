@@ -6,7 +6,6 @@ Why bother forgetting when you can remember?—am I right? This bot literally re
 
 - [ ] Support Slack
     - [ ] Optimize code
-    - [ ] Count reminder amount
     - [ ] Reminder remove command
     - [ ] Reminder edit command
     - [ ] Account linking
