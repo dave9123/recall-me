@@ -28,7 +28,7 @@ setInterval(async () => {
             );
 
         if (reminders.length > 0) {
-            logger.info(`Found ${reminders.length} reminder${reminders.length > 1 ? "s" : ""}`);
+            logger.info(`Found ${reminders.length} reminder${reminders.length > 1 ? "s" : ""} to notify`);
         }
 
         for (const reminder of reminders) {
@@ -51,12 +51,10 @@ setInterval(async () => {
                     type: "context",
                     elements: [
                         ...priorityContext,
-                        { type: "divider" },
                         {
                             type: "plain_text",
                             text: `Created at ${reminder.createdAt?.toUTCString()}`
                         },
-                        { type: "divider" },
                         {
                             type: "plain_text",
                             text: `Time: ${reminder.time?.toUTCString()}`
