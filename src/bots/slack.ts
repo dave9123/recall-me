@@ -289,7 +289,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
             );
         }
 
-        const reminderAmount = await fetchUserReminderAmount(body.user_id);
+        const reminderAmount = await fetchUserReminderAmount("slack", body.user_id);
         await client.views.open({
             trigger_id: body.trigger_id,
             view: {
@@ -790,7 +790,7 @@ app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
 });
 
 async function updateReminderList(body, client) {
-    const reminderAmount = await fetchUserReminderAmount(body.user.id);
+    const reminderAmount = await fetchUserReminderAmount("slack", body.user.id);
     const blocks = [
         { type: "section", text: { type: "mrkdwn", text: `You have ${reminderAmount} reminder${reminderAmount !== 1 ? "s" : ""}.` } },
         { type: "divider" },
