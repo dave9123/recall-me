@@ -213,7 +213,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
                     },
                     {
                         type: "plain_text",
-                        text: `Priority: ${reminder.priority ? ["High", "Medium", "Low"][reminder.priority - 1] : "None"}`,
+                        text: `Priority: ${reminder.priority ? ["Low", "Medium", "High"][reminder.priority - 1] : "None"}`,
                     }
                 );
             }
