@@ -15,7 +15,7 @@ const app = new App({
     token: process.env.SLACK_OAUTH_TOKEN,
     signingSecret: process.env.SLACK_SIGNING_SECRET,
     socketMode: process.env.SLACK_SOCKET_MODE == "true",
-    appToken: process.env.SLACK_SOCKET_MODE == "true" ? process.env.SLACK_APP_TOKEN : undefined,
+    appToken: process.env.SLACK_APP_TOKEN,
     port: parseInt(process.env.SLACK_PORT || "3000", 10),
     customRoutes: [
         {
