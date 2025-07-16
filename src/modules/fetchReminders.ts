@@ -5,7 +5,8 @@ import { eq, asc, and, notExists } from "drizzle-orm";
 export default async function fetchReminders(
     userId: string,
     provider: string,
-    limit: number = Number(process.env.REMINDER_LIMIT) || 5
+    limit: number = Number(process.env.REMINDER_LIMIT) || 5,
+    offset: number = 0
 ) {
     return await db
         .select({
@@ -25,5 +26,6 @@ export default async function fetchReminders(
             )
         ))
         .orderBy(asc(remindersTable.time))
+        .offset(offset)
         .limit(limit);
 }
