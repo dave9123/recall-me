@@ -14,8 +14,8 @@ const logger = createLogger("Slack");
 const app = new App({
     token: process.env.SLACK_OAUTH_TOKEN,
     signingSecret: process.env.SLACK_SIGNING_SECRET,
-    socketMode: process.env.SLACK_SOCKET_MODE == "true" ? true : false,
-    appToken: process.env.SLACK_APP_TOKEN,
+    socketMode: process.env.SLACK_SOCKET_MODE == "true",
+    appToken: process.env.SLACK_SOCKET_MODE == "true" ? process.env.SLACK_APP_TOKEN : undefined,
     port: parseInt(process.env.SLACK_PORT || "3000", 10),
     customRoutes: [
         {
@@ -24,7 +24,7 @@ const app = new App({
             handler: (req, res) => {
                 res.statusCode = 200;
                 res.setHeader("Content-Type", "text/plain");
-                res.end("Pong");
+                res.end("Pong!");
             }
         }
     ]
@@ -212,96 +212,6 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
 
         updateAccountInfo(body.user_id, body.user_name, "slack");
 
-        const reminders = await fetchReminders(body.user_id, "slack");
-
-        let remindersList = [];
-        for (const reminder of reminders) {
-            let priorityContext = [];
-            if (reminder.priority) {
-                priorityContext.push(
-                    {
-                        type: "plain_text",
-                        text: `|`,
-                    },
-                    {
-                        type: "plain_text",
-                        text: `Priority: ${reminder.priority ? ["Low", "Medium", "High"][reminder.priority - 1] : "None"}`,
-                    }
-                );
-            }
-            remindersList.push({
-                type: "section",
-                text: {
-                    type: "mrkdwn",
-                    text: `*${reminder.title}*${reminder.description ? `\n${reminder.description}` : ""}`,
-                },
-            },
-                {
-                    type: "context",
-                    elements: [
-                        /*{
-                            type: "plain_text",
-                            text: `ID: ${reminder.uid}`,
-                        },
-                        {
-                            type: "plain_text",
-                            text: `|`,
-                        },*/
-                        {
-                            type: "plain_text",
-                            text: `Time: ${reminder.time?.toUTCString()}`,
-                        },
-                        ...priorityContext,
-                    ],
-                },
-                {
-                    type: "actions",
-                    elements: [
-                        /*{
-                            type: "button",
-                            text: {
-                                type: "plain_text",
-                                text: "Mark as Done",
-                            },
-                            style: "primary",
-                            action_id: "mark_reminder_as_done",
-                            value: reminder.id.toString(),
-                        },
-                        {
-                            type: "button",
-                            text: {
-                                type: "plain_text",
-                                text: "Details",
-                            },
-                            action_id: "reminder_details",
-                            value: reminder.id.toString(),
-                        },*/
-                        {
-                            type: "button",
-                            text: {
-                                type: "plain_text",
-                                text: "Edit",
-                            },
-                            action_id: "edit_reminder",
-                            value: reminder.id.toString(),
-                        },
-                        {
-                            type: "button",
-                            text: {
-                                type: "plain_text",
-                                text: "Delete",
-                            },
-                            style: "danger",
-                            action_id: "delete_reminder",
-                            value: reminder.id.toString(),
-                        },
-                    ],
-                },
-                { type: "divider" }
-            );
-        }
-
-        const reminderAmount = await fetchUserReminderAmount("slack", body.user_id);
         await client.views.open({
             trigger_id: body.trigger_id,
             view: {
@@ -311,57 +221,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
                     type: "plain_text",
                     text: "Reminders List",
                 },
-                blocks: [
-                    /*{
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: `Sort by:`,
-                        },
-                        accessory: {
-                            type: "static_select",
-                            action_id: "sort_reminders",
-                            placeholder: {
-                                type: "plain_text",
-                                text: "Select sorting option",
-                            },
-                            options: [
-                                {
-                                    text: {
-                                        type: "plain_text",
-                                        text: "Time",
-                                    },
-                                    value: "time",
-                                },
-                                {
-                                    text: {
-                                        type: "plain_text",
-                                        text: "Priority",
-                                    },
-                                    value: "priority",
-                                },
-                            ],
-                        },
-                    },*/
-                    {
-                        type: "section",
-                        text: {
-                            type: "mrkdwn",
-                            text: `You have ${reminderAmount} reminder${reminderAmount !== 1 ? "s" : ""}.`,
-                        },
-                    },
-                    { type: "divider", },
-                    ...remindersList,
-                    /*{
-                        type: "context",
-                        elements: [
-                            {
-                                type: "plain_text",
-                                text: `Page 1 of 1`,
-                            },
-                        ],
-                    }*/
-                ],
+                blocks: await reminderListBlocks(body.user_id)
             },
         });
     } catch (error) {
@@ -560,6 +420,8 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
 
         await ack();
 
+        updateAccountInfo(body.user.id, body.user.username, "slack");
+
         const reminder = await db.select().from(remindersTable)
             .where(and(
                 eq(remindersTable.id, JSON.parse(body.view.private_metadata).reminder_id),
@@ -589,8 +451,6 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
             return;
         }
 
-        updateAccountInfo(body.user.id, body.user.username, "slack");
-
         await db.update(remindersTable)
             .set({
                 title: body.view.state.values.reminder_title!.title_input!.value as string,
@@ -606,31 +466,7 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
                 )
             );
 
-        await updateReminderList(body, client);
-        const blocks = [
-            { type: "section", text: { type: "mrkdwn", text: "Here are your reminders:" } },
-            { type: "divider" },
-            ...(await fetchReminders(body.user.id, "slack")).flatMap(r => {
-                const ctx: any[] = [{ type: "plain_text", text: `Time: ${r.time.toUTCString()}` }];
-                if (r.priority != null) {
-                    ctx.push(
-                        { type: "plain_text", text: "|" },
-                        { type: "plain_text", text: `Priority: ${["High", "Medium", "Low"][r.priority - 1]}` }
-                    );
-                }
-                return [
-                    { type: "section", text: { type: "mrkdwn", text: `*${r.title}*${r.description ? `\n${r.description}` : ""}` } },
-                    { type: "context", elements: ctx },
-                    {
-                        type: "actions", elements: [
-                            { type: "button", text: { type: "plain_text", text: "Edit" }, action_id: "edit_reminder", value: r.id.toString() },
-                            { type: "button", text: { type: "plain_text", text: "Delete" }, style: "danger", action_id: "delete_reminder", value: r.id.toString() }
-                        ]
-                    },
-                    { type: "divider" }
-                ];
-            })
-        ];
+
         const meta = JSON.parse(body.view.private_metadata);
         await client.views.update({
             view_id: meta.parent_view_id,
@@ -639,7 +475,7 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
                 type: "modal",
                 callback_id: "list_reminders_modal",
                 title: { type: "plain_text", text: "Reminders List" },
-                blocks
+                blocks: await reminderListBlocks(body.user.id)
             }
         });
     } catch (error) {
@@ -801,12 +637,12 @@ app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
     }
 });
 
-async function updateReminderList(body, client) {
-    const reminderAmount = await fetchUserReminderAmount("slack", body.user.id);
+async function reminderListBlocks(userId: string) {
+    const reminderAmount = await fetchUserReminderAmount("slack", userId);
     const blocks = [
         { type: "section", text: { type: "mrkdwn", text: `You have ${reminderAmount} reminder${reminderAmount !== 1 ? "s" : ""}.` } },
         { type: "divider" },
-        ...(await fetchReminders(body.user.id, "slack")).flatMap(r => {
+        ...(await fetchReminders(userId, "slack")).flatMap(r => {
             const ctx: any[] = [{ type: "plain_text", text: `Time: ${r.time.toUTCString()}` }];
             if (r.priority != null) {
                 ctx.push(
@@ -827,6 +663,10 @@ async function updateReminderList(body, client) {
             ];
         })
     ];
+    return blocks;
+}
+
+async function updateReminderList(body, client) {
     const meta = JSON.parse(body.view.private_metadata);
     await client.views.update({
         view_id: meta.parent_view_id,
@@ -835,7 +675,7 @@ async function updateReminderList(body, client) {
             type: "modal",
             callback_id: "list_reminders_modal",
             title: { type: "plain_text", text: "Reminders List" },
-            blocks
+            blocks: await reminderListBlocks(body.user.id)
         }
     });
 }
