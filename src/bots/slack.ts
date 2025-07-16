@@ -8,6 +8,7 @@ import createRandomId from "../modules/createRandomId";
 import priorityNumberConversion from "../modules/priorityNumberConversion";
 import fetchReminders from "../modules/fetchReminders";
 import fetchUserReminderAmount from "../modules/fetchUserReminderAmount";
+
 const logger = createLogger("Slack");
 
 const app = new App({
@@ -16,6 +17,16 @@ const app = new App({
     socketMode: process.env.SLACK_SOCKET_MODE == "true" ? true : false,
     appToken: process.env.SLACK_APP_TOKEN,
     port: parseInt(process.env.SLACK_PORT || "3000", 10),
+    customRoutes: [
+        {
+            path: "/ping",
+            method: "GET",
+            handler: (req, res) => {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "text/plain");
+                res.end("Pong");
+        }
+    ]
 });
 
 app.command("/reminder-create", async ({ ack, body, client }) => {

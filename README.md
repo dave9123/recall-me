@@ -10,6 +10,7 @@ Why bother forgetting when you can remember?—am I right? This bot literally re
     - [ ] Reminder edit command
     - [ ] Account linking
     - [ ] Pagination
+    - [ ] Use message scheduler to notify instead of looking up the database every time.
     - [ ] Sort by option
 - [ ] Support Discord
 - [ ] Support WhatsApp
