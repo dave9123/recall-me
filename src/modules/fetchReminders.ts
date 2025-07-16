@@ -6,7 +6,7 @@ export default async function fetchReminders(
     userId: string,
     provider: string,
     limit: number = Number(process.env.REMINDER_LIMIT) || 5,
-    offset: number = 0
+    page: number = 1
 ) {
     return await db
         .select({
@@ -26,6 +26,6 @@ export default async function fetchReminders(
             )
         ))
         .orderBy(asc(remindersTable.time))
-        .offset(offset)
+        .offset((page - 1) * limit)
         .limit(limit);
 }

@@ -206,7 +206,6 @@ app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
 });
 
 app.command("/reminder-list", async ({ ack, body, client }) => {
-    console.time("reminder-list-command");
     try {
         await ack();
 
@@ -221,7 +220,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
                     type: "plain_text",
                     text: "Reminders List",
                 },
-                blocks: await reminderListBlocks(body.user_id)
+                blocks: (await reminderListBlocks(body.user_id)).blocks
             },
         });
     } catch (error) {
@@ -475,7 +474,7 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
                 type: "modal",
                 callback_id: "list_reminders_modal",
                 title: { type: "plain_text", text: "Reminders List" },
-                blocks: await reminderListBlocks(body.user.id)
+                blocks: (await reminderListBlocks(body.user.id)).blocks
             }
         });
     } catch (error) {
@@ -625,7 +624,7 @@ app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
                         text: {
                             type: "mrkdwn",
                             text: `The reminder has been successfully deleted.`,
-                        },
+                        }
                     },
                 ],
             },
@@ -637,12 +636,57 @@ app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
     }
 });
 
-async function reminderListBlocks(userId: string) {
+app.action("previous_page", async ({ ack, body, client }) => {
+    try {
+        await ack();
+        const page = parseInt(body.actions[0].value, 10);
+        if (page <= 1) return;
+        const reminders = await reminderListBlocks(body.user.id, body.actions[0].value);
+        await client.views.update({
+            view_id: body.view.id,
+            hash: body.view.hash,
+            view: {
+                type: "modal",
+                callback_id: "list_reminders_modal",
+                title: { type: "plain_text", text: "Reminders List" },
+                blocks: reminders.blocks
+            }
+        });
+    } catch (error) {
+        logger.error("Error handling previous page action:", error);
+    }
+});
+
+app.action("next_page", async ({ ack, body, client }) => {
+    try {
+        await ack();
+        const page = parseInt(body.actions[0].value, 10);
+        if (page <= 1) return;
+        const reminders = await reminderListBlocks(body.user.id, body.actions[0].value);
+        if (reminders.totalPages < page) return;
+        await client.views.update({
+            view_id: body.view.id,
+            hash: body.view.hash,
+            view: {
+                type: "modal",
+                callback_id: "list_reminders_modal",
+                title: { type: "plain_text", text: "Reminders List" },
+                blocks: reminders.blocks
+            }
+        });
+    } catch (error) {
+        logger.error("Error handling next page action:", error);
+    }
+});
+
+async function reminderListBlocks(userId: string, page: number = 1) {
+    const limit = process.env.REMINDER_LIMIT ? parseInt(process.env.REMINDER_LIMIT, 10) : 5;
     const reminderAmount = await fetchUserReminderAmount("slack", userId);
+    const totalPages = Math.max(reminderAmount / limit, 1);
     const blocks = [
         { type: "section", text: { type: "mrkdwn", text: `You have ${reminderAmount} reminder${reminderAmount !== 1 ? "s" : ""}.` } },
         { type: "divider" },
-        ...(await fetchReminders(userId, "slack")).flatMap(r => {
+        ...(await fetchReminders(userId, "slack", limit, page)).flatMap(r => {
             const ctx: any[] = [{ type: "plain_text", text: `Time: ${r.time.toUTCString()}` }];
             if (r.priority != null) {
                 ctx.push(
@@ -661,9 +705,42 @@ async function reminderListBlocks(userId: string) {
                 },
                 { type: "divider" }
             ];
-        })
+        }),
+        {
+            type: "section",
+            text: {
+                type: "mrkdwn",
+                text: `Page ${page} of ${totalPages}`,
+            },
+        },
+        {
+            type: "actions",
+            elements: [
+                {
+                    type: "button",
+                    text: {
+                        type: "plain_text",
+                        text: "Previous"
+                    },
+                    action_id: "previous_page",
+                    value: (page - 1).toString(),
+                    ...(page > 1 ? { style: "primary" } : {})
+                },
+                {
+                    type: "button",
+                    text: {
+                        type: "plain_text",
+                        text: "Next"
+                    },
+                    action_id: "next_page",
+                    value: (page + 1).toString(),
+                    ...(page < totalPages ? { style: "primary" } : {})
+                }
+            ]
+        }
     ];
-    return blocks;
+    console.log(blocks);
+    return { blocks, totalPages };
 }
 
 async function updateReminderList(body, client) {
@@ -675,7 +752,7 @@ async function updateReminderList(body, client) {
             type: "modal",
             callback_id: "list_reminders_modal",
             title: { type: "plain_text", text: "Reminders List" },
-            blocks: await reminderListBlocks(body.user.id)
+            blocks: (await reminderListBlocks(body.user.id)).blocks
         }
     });
 }
