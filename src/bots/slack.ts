@@ -8,6 +8,7 @@ import createRandomId from "../modules/createRandomId";
 import priorityNumberConversion from "../modules/priorityNumberConversion";
 import fetchReminders from "../modules/fetchReminders";
 import fetchUserReminderAmount from "../modules/fetchUserReminderAmount";
+import { parse } from "path";
 
 const logger = createLogger("Slack");
 
@@ -151,7 +152,7 @@ app.command("/reminder-create", async ({ ack, body, client }) => {
     }
 });
 
-app.view("create_reminder_modal", async ({ ack, body, view, client }) => {
+app.view({ callback_id: "create_reminder_modal" }, async ({ ack, body, view, client }) => {
     try {
         const errors: Record<string, string> = {};
 
@@ -228,7 +229,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
     }
 });
 
-app.action("edit_reminder", async ({ ack, body, client }) => {
+app.action({ action_id: "edit_reminder" }, async ({ ack, body, client }) => {
     try {
         await ack();
 
@@ -393,7 +394,7 @@ app.action("edit_reminder", async ({ ack, body, client }) => {
     }
 });
 
-app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
+app.view({ callback_id: "edit_reminder_modal" }, async ({ ack, body, view, client }) => {
     try {
         const errors: Record<string, string> = {};
 
@@ -482,7 +483,7 @@ app.view("edit_reminder_modal", async ({ ack, body, view, client }) => {
     }
 });
 
-app.action("delete_reminder", async ({ ack, body, client }) => {
+app.action({ action_id: "delete_reminder" }, async ({ ack, body, client }) => {
     try {
         await ack();
 
@@ -564,7 +565,7 @@ app.action("delete_reminder", async ({ ack, body, client }) => {
     }
 });
 
-app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
+app.action({ action_id: "confirm_delete_reminder" }, async ({ ack, body, client }) => {
     try {
         await ack();
 
@@ -636,7 +637,29 @@ app.action("confirm_delete_reminder", async ({ ack, body, client }) => {
     }
 });
 
-app.action("previous_page", async ({ ack, body, client }) => {
+app.action({ action_id: "previous_page" }, async ({ ack, body, client }) => {
+    try {
+        await ack();
+        const page = parseInt(body.actions[0].value, 10);
+        if (page < 1) return;
+        const reminders = await reminderListBlocks(body.user.id, body.actions[0].value);
+        if (page > reminders.totalPages) return;        
+        await client.views.update({
+            view_id: body.view.id,
+            hash: body.view.hash,
+            view: {
+                type: "modal",
+                callback_id: "list_reminders_modal",
+                title: { type: "plain_text", text: "Reminders List" },
+                blocks: reminders.blocks
+            }
+        });
+    } catch (error) {
+        logger.error("Error handling previous_page action:", error);
+    }
+});
+
+app.action({ action_id: "next_page" }, async ({ ack, body, client }) => {
     try {
         await ack();
         const page = parseInt(body.actions[0].value, 10);
@@ -654,33 +677,13 @@ app.action("previous_page", async ({ ack, body, client }) => {
             }
         });
     } catch (error) {
-        logger.error("Error handling previous page action:", error);
+        logger.error("Error handling next_page action:", error);
     }
 });
 
-app.action("next_page", async ({ ack, body, client }) => {
-    try {
-        await ack();
-        const page = parseInt(body.actions[0].value, 10);
-        const reminders = await reminderListBlocks(body.user.id, body.actions[0].value);
-        if (reminders.totalPages < page) return;
-        await client.views.update({
-            view_id: body.view.id,
-            hash: body.view.hash,
-            view: {
-                type: "modal",
-                callback_id: "list_reminders_modal",
-                title: { type: "plain_text", text: "Reminders List" },
-                blocks: reminders.blocks
-            }
-        });
-    } catch (error) {
-        logger.error("Error handling next page action:", error);
-    }
-});
-
-async function reminderListBlocks(userId: string, page: number = 1) {
+async function reminderListBlocks(userId: string, pageValue?: string | number) {
     const limit = process.env.REMINDER_LIMIT ? parseInt(process.env.REMINDER_LIMIT, 10) : 5;
+    const page = parseInt(pageValue, 10) || 1;
     const reminderAmount = await fetchUserReminderAmount("slack", userId);
     const totalPages = Math.ceil(reminderAmount / limit);
     const blocks = [
@@ -739,7 +742,6 @@ async function reminderListBlocks(userId: string, page: number = 1) {
             ]
         }
     ];
-    console.log(blocks);
     return { blocks, totalPages };
 }
 
