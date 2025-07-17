@@ -662,7 +662,6 @@ app.action("next_page", async ({ ack, body, client }) => {
     try {
         await ack();
         const page = parseInt(body.actions[0].value, 10);
-        if (page < 1) return;
         const reminders = await reminderListBlocks(body.user.id, body.actions[0].value);
         if (reminders.totalPages < page) return;
         await client.views.update({
