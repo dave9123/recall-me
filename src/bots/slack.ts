@@ -8,7 +8,6 @@ import createRandomId from "../modules/createRandomId";
 import priorityNumberConversion from "../modules/priorityNumberConversion";
 import fetchReminders from "../modules/fetchReminders";
 import fetchUserReminderAmount from "../modules/fetchUserReminderAmount";
-import { parse } from "path";
 
 const logger = createLogger("Slack");
 
@@ -18,6 +17,7 @@ const app = new App({
     socketMode: process.env.SLACK_SOCKET_MODE == "true",
     appToken: process.env.SLACK_SOCKET_MODE == "true" ? process.env.SLACK_APP_TOKEN : undefined,
     port: parseInt(process.env.SLACK_PORT || "3000", 10),
+    scopes: [ "commands", "im:write" ],
     customRoutes: [
         {
             path: "/ping",

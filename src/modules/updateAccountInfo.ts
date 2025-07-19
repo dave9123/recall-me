@@ -7,9 +7,10 @@ export default async function updateAccountInfo(uid: string, username: string, p
         uid: `${provider}-${uid}`,
         username,
         provider,
+        lastUsed: new Date(),
     }).onConflictDoUpdate({
         target: usersTable.uid,
-        set: { username, provider },
+        set: { username, provider, lastUsed: new Date() },
         where: sql`${usersTable.username} IS DISTINCT FROM EXCLUDED.username`,
     });
 }
