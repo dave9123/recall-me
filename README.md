@@ -9,13 +9,11 @@ Why bother forgetting when you can remember?—am I right? This bot literally re
     - [ ] Reminder remove command
     - [ ] Reminder edit command
     - [ ] Account linking
-    - [ ] Pagination
-    - [ ] Use message scheduler to notify instead of looking up the database every time.
+    - [ ] Use message scheduler to notify instead of looking up the database every time
     - [ ] Sort by option
     - [ ] Reminder details
     - [ ] Timezone
     - [ ] Subscription
-    - [ ] Reminder details
 - [ ] Support Discord
 - [ ] Support WhatsApp
 - [ ] Support Zulip

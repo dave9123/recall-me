@@ -14,7 +14,7 @@ setInterval(async () => {
             .from(remindersTable)
             .where(
                 and(
-                    lte(remindersTable.time, new Date()),
+                    lte(remindersTable.time, new Date(Date.now() - 60 * 1000)),
                     notExists(
                         db.select().from(notifiedTable)
                             .where(
