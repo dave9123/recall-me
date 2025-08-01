@@ -6,7 +6,6 @@ const logger = createLogger("DB");
 
 const db = drizzle({
     connection: {
-        connectionString: process.env.DATABASE_URL!,
         ssl: process.env.DATABASE_SSL === "true"
             ? process.env.DATABASE_REJECT_UNAUTHORIZED == "true"
                 ? { rejectUnauthorized: true }

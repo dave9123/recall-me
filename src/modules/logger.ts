@@ -1,13 +1,13 @@
 import winston from "winston";
 
 export function createLogger(label: string) {
-    return winston.createLogger({
+    const logger = winston.createLogger({
         level: "info",
         format: winston.format.combine(
             winston.format.label({ label }),
             winston.format.timestamp(),
-            winston.format.printf(({ level, message, label, timestamp }) => {
-                return `${timestamp} [${label}] ${level}: ${message}`;
+            winston.format.printf(({ level, message, label: lbl, timestamp }) => {
+                return `${timestamp} [${lbl}] ${level}: ${message}`;
             })
         ),
         transports: [
@@ -17,5 +17,9 @@ export function createLogger(label: string) {
                 filename: `${label.toLowerCase()}.log`,
             }),
         ],
+    });
+
+    return Object.assign(logger, {
+        trace: (msg: string) => logger.log("trace", msg),
     });
 }
