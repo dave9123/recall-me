@@ -206,7 +206,7 @@ app.view({ callback_id: "create_reminder_modal" }, async ({ ack, body, view, cli
     }
 });
 
-app.command("/reminder-list", async ({ ack, body, client }) => {
+app.command("/reminders", async ({ ack, body, client }) => {
     try {
         await ack();
 
@@ -225,7 +225,7 @@ app.command("/reminder-list", async ({ ack, body, client }) => {
             },
         });
     } catch (error) {
-        logger.error("Error handling /reminder-list command:", error);
+        logger.error("Error handling /reminders command:", error);
     }
 });
 

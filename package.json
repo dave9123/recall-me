@@ -16,6 +16,7 @@
     "license": "GPLv3",
     "dependencies": {
         "@slack/bolt": "^4.4.0",
+        "@slack/oauth": "^3.0.3",
         "baileys": "^6.7.18",
         "chrono-node": "^2.8.3",
         "dotenv": "^17.2.0",
