@@ -713,7 +713,7 @@ async function reminderListBlocks(userId: string, pageValue?: string | number) {
             type: "section",
             text: {
                 type: "mrkdwn",
-                text: `Page ${page} of ${totalPages}`,
+                text: `Page ${totalPages === 0 ? "0" : page} of ${totalPages}`,
             },
         },
         {
