@@ -24,28 +24,7 @@ const app = new App({
     installerOptions: {
         authVersion: "v2",
         directInstall: true,
-        installPath: "/slack/install",
-        redirectUriPath: "/slack/oauth_redirect",
-
-        callbackOptions: {
-            success: (installation, installUrlOptions, req, res) => {
-                res.setHeader("Content-Type", "application/json");
-                if (installUrlOptions.scopes.includes("chat:write")) {
-                    res.statusCode = 200;
-                    res.end(JSON.stringify({ message: "The installation succeeded!" }));
-                    sendOnboardingMessage(installation.user.id);
-                } else {
-                    res.statusCode = 403;
-                    res.end(JSON.stringify({ message: "Insufficient permissions" }));
-                }
-            },
-            failure: (error, installUrlOptions, req, res) => {
-                logger.error("Slack app installation failed:", error);
-                res.setHeader("Content-Type", "application/json");
-                res.statusCode = 500;
-                res.end(JSON.stringify({ message: "Something strange happened..." }));
-            },
-        },
+        installPath: "/slack/install",    
     },
     customRoutes: [
         {
