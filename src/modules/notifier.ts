@@ -73,4 +73,4 @@ setInterval(async () => {
     } catch (err) {
         logger.warn("An error occured while trying to notify:", err)
     }
-}, 60 * 1000);
+}, 30 * 1000);

@@ -1,4 +1,4 @@
-import { App } from "@slack/bolt";
+import { App, FileInstallationStore } from "@slack/bolt";
 import { createLogger } from "../modules/logger";
 import db from "../modules/db";
 import { eq, and } from "drizzle-orm";
@@ -22,10 +22,9 @@ const app = new App({
     port: parseInt(process.env.SLACK_PORT || "3000", 10),
     scopes: ["commands", "im:write"],
     installerOptions: {
-        authVersion: "v2",
-        directInstall: true,
-        installPath: "/slack/install",    
+        installPath: "/slack/install",  
     },
+    installationStore: new FileInstallationStore(),
     customRoutes: [
         {
             path: "/ping",
