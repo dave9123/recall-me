@@ -6,7 +6,7 @@ Why bother forgetting when you can remember?—am I right? This bot literally re
 
 The commands provided are /reminder-create and /reminders.
 
-![Using the bot on Slack](https://hc-cdn.hel1.your-objectstorage.com/s/v3/9806c50eba3d4c4b31453c12921f7f672b49cd18_slack_qpcpdj8zww.mp4)
+![Using the bot on Slack](https://raw.githubusercontent.com/dave9123/recall-me/refs/heads/main/media/demo.mp4)
 Here's a video of me demoing the bot!
 
 ## Hosting my own instance
