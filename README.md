@@ -2,16 +2,54 @@
 
 Why bother forgetting when you can remember?—am I right? This bot literally reminds you through the social media(s) you already use.
 
+## How to use?
+
+The commands provided are /reminder-create and /reminders.
+
+![Using the bot on Slack](https://hc-cdn.hel1.your-objectstorage.com/s/v3/9806c50eba3d4c4b31453c12921f7f672b49cd18_slack_qpcpdj8zww.mp4)
+Here's a video of me demoing the bot!
+
+## Hosting my own instance
+
+Although it's not necessary, you could host your own.
+
+1. Create & configure your Slack App  
+   • Visit https://api.slack.com/apps and click **Create New App** → “From scratch”  
+   • Give it a name (e.g. “Recall Me”) and pick your development workspace  
+   • Under **OAuth & Permissions** add scopes:  
+     – commands  
+     – im:write  
+   • Under **Slash Commands** add two commands:  
+     – `/reminder-create` → description: “Create a new reminder”  
+     – `/reminders` → description: “List your reminders”  
+   • (Optional) Under **Socket Mode** → Enable Socket Mode → copy **App Level Token**  
+   • Install the app to your workspace and copy:  
+     – **Bot User OAuth Token**  
+     – **Signing Secret**  
+
+2. Clone & install dependencies  
+   ```bash
+   git clone https://github.com/dave9123/recall-me.git
+   cd recall-me
+   pnpm install
+
+3. Configure & install dependencies
+    ```bash
+    cp .env.example .env
+    ```
+    Open `.env` in your editor and set `SLACK_APP_TOKEN` (if using Socket Mode), `SLACK_OAUTH_TOKEN`, `SLACK_SIGNING_SECRET`, `SLACK_SOCKET_MODE` (true|false), and `SLACK_PORT` (default: 3000).
+4. Start the bot
+    ```bash
+    pnpm start:dev
+    ```
+
 ## To-do
 
 - [ ] Support Slack
     - [ ] Optimize code
-    - [ ] Reminder remove command
-    - [ ] Reminder edit command
     - [ ] Account linking
     - [ ] Use message scheduler to notify instead of looking up the database every time
     - [ ] Sort by option
-    - [ ] Reminder details
     - [ ] Timezone
     - [ ] Subscription
 - [ ] Support Discord
