@@ -16,7 +16,7 @@
     "license": "GPLv3",
     "dependencies": {
         "@slack/bolt": "^4.4.0",
-        "baileys": "^6.7.19",
+        "baileys": "^6.7.20",
         "chrono-node": "^2.9.0",
         "dotenv": "^17.2.3",
         "drizzle-orm": "^0.44.5",
