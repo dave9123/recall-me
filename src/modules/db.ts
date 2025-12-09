@@ -46,5 +46,5 @@ db.execute(sql`
 }).catch((error) => {
     logger.error("Error creating database triggers:", error);
     logger.error("Ensure your database schema is up to date and the connection is properly configured.");
-    process.exit(1);
+    //process.exit(1);
 });
