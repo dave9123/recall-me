@@ -20,7 +20,7 @@
         "chrono-node": "^2.9.0",
         "dotenv": "^17.2.3",
         "drizzle-orm": "^0.45.0",
-        "pg": "^8.16.3",
+        "pg": "^8.17.1",
         "winston": "^3.19.0"
     },
     "devDependencies": {
