@@ -19,7 +19,7 @@ importers:
         version: 2.9.0
       dotenv:
         specifier: ^17.2.3
-        version: 17.2.3
+        version: 17.3.1
       drizzle-orm:
         specifier: ^0.45.0
         version: 0.45.1(@types/pg@8.18.0)(pg@8.20.0)
@@ -1540,8 +1540,8 @@ packages:
     resolution: {integrity: sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==}
     engines: {node: '>=8'}
 
-  dotenv@17.2.3:
-    resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
+  dotenv@17.3.1:
+    resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
     engines: {node: '>=12'}
 
   drizzle-kit@0.31.8:
@@ -4208,7 +4208,7 @@ snapshots:
 
   detect-newline@3.1.0: {}
 
-  dotenv@17.2.3: {}
+  dotenv@17.3.1: {}
 
   drizzle-kit@0.31.8:
     dependencies:
